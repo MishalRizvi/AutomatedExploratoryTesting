@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: '/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -14,7 +14,7 @@ export const generateTests = async (formData: {
     requiresAuth?: boolean; 
 }) => {
     try {
-        const response = await api.post('/api/generate-tests', formData);
+        const response = await api.post('/generate-tests', formData);
         return response.data;
     } 
     catch (error) {

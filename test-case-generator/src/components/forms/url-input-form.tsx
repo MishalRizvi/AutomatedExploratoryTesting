@@ -90,6 +90,28 @@ export default function UrlInputForm() {
                 )}
                 <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded-md">Generate Test Cases</button>
             </form> 
+            
+            {/* Display the result */}
+            {result && (
+                <div className="mt-8 p-4 bg-gray-50 rounded-md">
+                    <h2 className="text-lg font-semibold mb-4">Generated Test Cases</h2>
+                    <pre className="overflow-auto">{JSON.stringify(result, null, 2)}</pre>
+                </div>
+            )}
+
+            {/* Display the error */}
+            {error && (
+                <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-md">
+                    {error}
+                </div>
+            )}
+
+            {/* Display the loading state */}
+            {loading && (
+                <div className="mt-4 text-center">
+                    <p>Generating tests...</p>
+                </div>
+            )}
         </div>
     );
 }
