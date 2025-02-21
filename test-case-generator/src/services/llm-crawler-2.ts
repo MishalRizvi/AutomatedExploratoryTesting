@@ -265,12 +265,14 @@ export class LLMCrawler {
             - "navigate-to-dashboard" - if it is just a link to another page 
 
             Return array of workflows as a JSON array with this format:
-            [
-                {
-                    "name": "Workflow Name", 
-                    "description": "Detailed description of what this workflow does"
-                }
-            ]
+            {
+                "workflows": [
+                    {
+                        "name": "Workflow Name", 
+                        "description": "Detailed description of what this workflow does"
+                    }
+                ]
+            }
         `; 
 
         try {
@@ -400,11 +402,52 @@ export class LLMCrawler {
                     3. Handle any required form inputs 
                     4. Wait for elements when needed 
 
-                    Return ONLY ONE of:
-                    1. A specific action in plain English (e.g. "Click on the 'Submit' button")
-                    2. "WORKFLOW COMPLETE" if the workflow is finished 
+                    Return your response as a JSON object with the following structure:
 
-                    Current task: ${workflowName}
+                    {
+                        "nextAction": {
+                            "type": "click" | "fill" | "press" | "type" | "check" | "uncheck" | 
+                                   "select" | "hover" | "dblclick" | "focus" | "waitForSelector" |
+                                   "waitForTimeout" | "waitForNavigation" | "getByRole" | "getByText" |
+                               "getByLabel" | "getByPlaceholder" | "getByTestId" | "keyboard.press" |
+                               "keyboard.type" | "mouse.click" | "mouse.dblclick" | "mouse.hover",
+                        "selector": "the selector (if needed)",
+                        "value": "the value (if needed)",
+                        "timeout": "optional timeout in ms"
+                        },
+                        "status": "CONTINUE" or "COMPLETE"
+                    }      
+                        
+                    Examples:
+                    {
+                        "nextAction": {
+                            "type": "click",
+                            "selector": "text=Login",
+                            "value": null
+                        },
+                        "status": "CONTINUE"
+                    }
+
+                    {
+                        "nextAction": {
+                            "type": "fill",
+                            "selector": "input[name='email']",
+                            "value": "test@example.com"
+                        },
+                        "status": "CONTINUE"
+                    }
+
+                    {
+                        "nextAction": {
+                            "type": "",
+                            "selector": "",
+                            "value": ""
+                        },
+                        "status": "COMPLETE"
+                    }
+
+                    Include waiting for elements/navigation when needed. 
+                    Return ONLY the command, no explanation. 
                 `; 
 
                 const actionCompletion = await this.client.chat.completions.create({
@@ -427,62 +470,110 @@ export class LLMCrawler {
                     response_format: { type: 'json_object' }
                 }); 
 
-                const nextAction = actionCompletion.choices[0].message.content?.trim() || ''; 
+                const result = JSON.parse(actionCompletion.choices[0].message.content || '{}') as {nextAction: {type: string, selector: string, value: string, timeout: number}, status: string}; 
+                const status = result.status; 
 
-                if (nextAction === 'WORKFLOW COMPLETE') {
+                if (status === 'COMPLETE') {
                     console.log(`Workflow ${workflowName} complete`); 
                     break; 
                 }
                 
                 //Convert action to Playwright command 
-                const commandPrompt = `
-                    Convert this action to a Playwright command: 
-                    "${nextAction}"
+                const {type, selector, value, timeout} = result.nextAction; 
+                console.log(`Executing action for ${workflowName}:`, {type, selector, value}); 
+                switch (type) {
+                    // Basic actions
+                    case 'click':
+                        await page.click(selector, { timeout });
+                        break;
+                    case 'fill':
+                        await page.fill(selector, value, { timeout });
+                        break;
+                    case 'type':
+                        await page.type(selector, value, { timeout });
+                        break;
+                    case 'press':
+                        await page.press(selector, value);
+                        break;
 
-                    Page HTML for context:
-                    ${state.html}
+                    // Form interactions
+                    case 'check':
+                        await page.check(selector, { timeout });
+                        break;
+                    case 'uncheck':
+                        await page.uncheck(selector, { timeout });
+                        break;
+                    case 'select':
+                        await page.selectOption(selector, value, { timeout });
+                        break;
 
-                    Return ONLY the Playwright command, for example:
-                    - page.getByRole()
-                    - page.getByLabel()
-                    - page.getByText()
-                    - page.getByTestId()
-                    - page.fill()
-                    - page.click()
-                    - page.waitForSelector()
-                    - page.waitForTimeout()
-                    - page.waitForLoadState()
-                    - page.waitForEvent()
-                    - page.waitForFunction()
-                    - page.waitForTimeout()
+                    // Mouse actions
+                    case 'hover':
+                        await page.hover(selector, { timeout });
+                        break;
+                    case 'dblclick':
+                        await page.dblclick(selector, { timeout });
+                        break;
+                    case 'focus':
+                        await page.focus(selector, { timeout });
+                        break;
 
-                    Include waiting for elements/navigation when needed. 
-                    Return ONLY the command, no explanation. 
-                `; 
+                    // Locator strategies
+                    case 'getByRole':
+                        await page.getByRole(selector as any).click();
+                        break;
+                    case 'getByText':
+                        await page.getByText(selector).click();
+                        break;
+                    case 'getByLabel':
+                        await page.getByLabel(selector).click();
+                        break;
+                    case 'getByPlaceholder':
+                        await page.getByPlaceholder(selector).click();
+                        break;
+                    case 'getByTestId':
+                        await page.getByTestId(selector).click();
+                        break;
 
-                const commandCompletion = await this.client.chat.completions.create({
-                    messages: [{
-                        role: 'user', 
-                        content: commandPrompt, 
-                    }], 
-                    model: 'gpt-4o'
-                }); 
+                    // Keyboard actions
+                    case 'keyboard.press':
+                        await page.keyboard.press(value);
+                        break;
+                    case 'keyboard.type':
+                        await page.keyboard.type(value);
+                        break;
 
-                const playwrightCommand = commandCompletion.choices[0].message.content?.trim() || ''; 
+                    // Mouse actions
+                    case 'mouse.click':
+                        await page.mouse.click(parseInt(selector), parseInt(value));
+                        break;
+                    case 'mouse.dblclick':
+                        await page.mouse.dblclick(parseInt(selector), parseInt(value));
+                        break;
+                    case 'mouse.hover':
+                        await page.mouse.move(parseInt(selector), parseInt(value));
+                        break;
+                    
+                    // Waiting
+                    case 'waitForSelector':
+                        await page.waitForSelector(selector, { timeout });
+                        break;
+                    case 'waitForTimeout':
+                        await page.waitForTimeout(parseInt(value));
+                        break;
+                    case 'waitForNavigation':
+                        await page.waitForNavigation({ timeout });
+                        break;
 
-                console.log(`Executing action for: ${workflowName}:`, {
-                    action: nextAction, 
-                    command: playwrightCommand
-                }); 
-
-                //Execute the command 
-                await page.evaluate(playwrightCommand); 
+                    default:
+                        throw new Error(`Unknown action type: ${type}`);
+                }
 
                 //Wait for any navigation or network requests
                 await page.waitForLoadState('networkidle'); 
 
                 //Store successful action 
-                actions.push(playwrightCommand); 
+                actions.push(JSON.stringify(result.nextAction)); 
 
                 //Reset retry count on success
                 retryCount = 0;   
