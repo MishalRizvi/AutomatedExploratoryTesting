@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { LLMGuidedCrawler } from '@/services/llm-crawler'; 
 import { TestCaseGenerator, TestCase } from '@/services/test-case-generator'; 
+import { LLMCrawler } from '@/services/llm-crawler-2';
 
 interface WebsiteRequest { 
     url: string; 
@@ -24,28 +25,33 @@ export async function POST(request: Request) {
 
         //Initialise crawler and explore website 
 
-        const crawler = new LLMGuidedCrawler(process.env.OPENAI_API_KEY || "");
-        const explorationPath = await crawler.exploreWebsite(data.url, data.websiteContext || "Explore the website and all possible user interaction flows"); 
+        const crawler = new LLMCrawler(process.env.OPENAI_API_KEY || "", {
+            credentials: data.requiresAuth ? {
+                username: data.username || "",
+                password: data.password || ""
+            } : undefined,
+            websiteContext: data.websiteContext || ""
+        });
+        const workflows= await crawler.exploreWebsite(data.url, data.websiteContext || "Explore the website and all possible user interaction flows"); 
 
-        const testGenerator = new TestCaseGenerator(); 
-        const testCases = testGenerator.generateTestCases(explorationPath); 
-        //Structure the response 
+        // const testGenerator = new TestCaseGenerator(); 
+        // const testCases = testGenerator.generateTestCases(explorationPath); 
         return NextResponse.json({
             status: "success",
             data: {
-                url: data.url, 
+                url: data.url,
                 summary: {
-                    totalTests: testCases.length,
-                    highPriority: testCases.filter((test: TestCase) => test.priority === 'high').length,
-                    coverage: {
-                        authentication: testCases.some(test => test.tags.includes('authentication')),
-                        navigation: testCases.some(test => test.tags.includes('navigation')),
-                    }
-                }, 
-                testCases: testCases, 
-                explorationPath: explorationPath
+                    totalWorkflows: workflows.length,
+                    workflowNames: workflows.map(w => w.name),
+                },
+                workflows: workflows.map(workflow => ({
+                    name: workflow.name,
+                    description: workflow.description,
+                    startUrl: workflow.startUrl,
+                    actions: workflow.actions
+                }))
             }
-        }); 
+        });
     }
     catch (error: any) {
         console.error("Error generating tests:", error); 

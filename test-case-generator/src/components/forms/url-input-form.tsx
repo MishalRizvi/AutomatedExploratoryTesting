@@ -8,6 +8,7 @@ interface UrlFormData {
     username?: string; 
     password?: string; 
     requiresAuth: boolean;
+    websiteContext?: string; 
 }
 
 
@@ -17,6 +18,7 @@ export default function UrlInputForm() {
         username: '',
         password: '',
         requiresAuth: false,
+        websiteContext: ''
     });
 
     const [loading, setLoading] = useState(false);
@@ -57,6 +59,22 @@ export default function UrlInputForm() {
                         value={formData.url}
                         onChange={(e) => setFormData({...formData, url: e.target.value})}
                         placeholder="https://www.example.com"
+                    />
+                </div>
+
+                {/* Website Context Input */}
+                <div>
+                    <label htmlFor="websiteContext" className="block text-sm font-medium mb-1">
+                        Website Context
+                    </label>
+                    <input 
+                        type="text"
+                        id="websiteContext"
+                        required 
+                        className="w-full p-2 border rounded-md"
+                        value={formData.websiteContext}
+                        onChange={(e) => setFormData({...formData, websiteContext: e.target.value})}
+                        placeholder="Enter website context"
                     />
                 </div>
 
