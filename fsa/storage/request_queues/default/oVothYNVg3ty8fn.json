@@ -1,0 +1,9 @@
+{
+	"id": "oVothYNVg3ty8fn",
+	"json": "{\"id\":\"oVothYNVg3ty8fn\",\"url\":\"https://redditinc.com/tl/policies/embeds-terms\",\"uniqueKey\":\"https://redditinc.com/tl/policies/embeds-terms\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Embeds Terms of Use - NL-NL\",\"currentUrl\":\"https://redditinc.com/tl/policies/embeds-terms\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/nl-nl/policies/reddit-contributor-monetization-nl-nl?hsLang=en\",\"https://redditinc.com/pt-pt/policies/embeds-terms?hsLang=nl-nl\",\"https://redditinc.com/tl/policies/embeds-terms\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740677583714,
+	"retryCount": 0,
+	"uniqueKey": "https://redditinc.com/tl/policies/embeds-terms",
+	"url": "https://redditinc.com/tl/policies/embeds-terms"
+}

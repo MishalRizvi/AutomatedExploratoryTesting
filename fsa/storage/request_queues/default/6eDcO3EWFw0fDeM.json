@@ -1,0 +1,9 @@
+{
+	"id": "6eDcO3EWFw0fDeM",
+	"json": "{\"id\":\"6eDcO3EWFw0fDeM\",\"url\":\"https://redditinc.com/pt-pt/policies/earn-policy\",\"uniqueKey\":\"https://redditinc.com/pt-pt/policies/earn-policy\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Reddit Earn Policy\",\"currentUrl\":\"https://redditinc.com/pt-pt/policies/earn-policy\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/tl/policies/earn-policy?hsLang=en\",\"https://redditinc.com/pt-pt/policies/earn-policy\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740677582196,
+	"retryCount": 0,
+	"uniqueKey": "https://redditinc.com/pt-pt/policies/earn-policy",
+	"url": "https://redditinc.com/pt-pt/policies/earn-policy"
+}

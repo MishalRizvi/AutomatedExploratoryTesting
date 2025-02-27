@@ -1,0 +1,9 @@
+{
+	"id": "77ivVwB14UpVLsC",
+	"json": "{\"id\":\"77ivVwB14UpVLsC\",\"url\":\"https://redditinc.com/policies/user-agreement\",\"loadedUrl\":\"https://redditinc.com/policies/user-agreement\",\"uniqueKey\":\"https://redditinc.com/policies/user-agreement\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Reddit and Intercontinental Exchange Collaborate to Research, Build, and Offer New Data and Analytics Products for the Financial Industry\",\"currentUrl\":\"https://redditinc.com/policies/user-agreement\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-27T17:30:01.704Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://redditinc.com/policies/user-agreement",
+	"url": "https://redditinc.com/policies/user-agreement"
+}
