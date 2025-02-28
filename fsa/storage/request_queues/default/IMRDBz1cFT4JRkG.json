@@ -1,0 +1,9 @@
+{
+	"id": "IMRDBz1cFT4JRkG",
+	"json": "{\"id\":\"IMRDBz1cFT4JRkG\",\"url\":\"https://www.tern-group.com/de/blog/nurse-recognition-in-germany-anerkennung\",\"uniqueKey\":\"https://www.tern-group.com/de/blog/nurse-recognition-in-germany-anerkennung\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738109978,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/blog/nurse-recognition-in-germany-anerkennung",
+	"url": "https://www.tern-group.com/de/blog/nurse-recognition-in-germany-anerkennung"
+}

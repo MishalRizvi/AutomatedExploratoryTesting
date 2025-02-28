@@ -1,9 +1,0 @@
-{
-	"id": "pJWrLh3RC0LXUTB",
-	"json": "{\"id\":\"pJWrLh3RC0LXUTB\",\"url\":\"https://redditinc.com/blog/new-ways-to-ama?hsLang=en\",\"loadedUrl\":\"https://redditinc.com/blog/new-ways-to-ama\",\"uniqueKey\":\"https://redditinc.com/blog/new-ways-to-ama?hsLang=en\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Introducing Reddit Answers\",\"currentUrl\":\"https://redditinc.com/blog/new-ways-to-ama?hsLang=en\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"https://redditinc.com/developer-terms?hsLang=en\",\"https://redditinc.com/bn/policies/developer-terms\",\"https://redditinc.com/?hsLang=bn\",\"https://redditinc.com/blog/introducing-reddit-answers?hsLang=en\",\"https://redditinc.com/blog/new-ways-to-ama?hsLang=en\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-27T17:32:06.662Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/blog/new-ways-to-ama?hsLang=en",
-	"url": "https://redditinc.com/blog/new-ways-to-ama?hsLang=en"
-}

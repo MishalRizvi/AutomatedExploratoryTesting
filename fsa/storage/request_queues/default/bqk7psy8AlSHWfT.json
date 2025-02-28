@@ -1,0 +1,9 @@
+{
+	"id": "bqk7psy8AlSHWfT",
+	"json": "{\"id\":\"bqk7psy8AlSHWfT\",\"url\":\"https://www.tern-group.com/candidate\",\"uniqueKey\":\"https://www.tern-group.com/candidate\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738091132,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/candidate",
+	"url": "https://www.tern-group.com/candidate"
+}

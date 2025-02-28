@@ -1,0 +1,9 @@
+{
+	"id": "JY6dS4qkms5Qsr9",
+	"json": "{\"id\":\"JY6dS4qkms5Qsr9\",\"url\":\"https://www.tern-group.com/uk-doctors\",\"uniqueKey\":\"https://www.tern-group.com/uk-doctors\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738091132,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/uk-doctors",
+	"url": "https://www.tern-group.com/uk-doctors"
+}

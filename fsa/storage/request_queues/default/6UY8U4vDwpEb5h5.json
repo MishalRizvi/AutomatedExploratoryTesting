@@ -1,9 +1,0 @@
-{
-	"id": "6UY8U4vDwpEb5h5",
-	"json": "{\"id\":\"6UY8U4vDwpEb5h5\",\"url\":\"https://redditinc.com/es-es/policies/contributor-terms-es-es-2?hsLang=th\",\"uniqueKey\":\"https://redditinc.com/es-es/policies/contributor-terms-es-es-2?hsLang=th\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"ข้อกำหนด API ข้อมูล\",\"currentUrl\":\"https://redditinc.com/es-es/policies/contributor-terms-es-es-2?hsLang=th\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/bn/policies/data-api-terms?hsLang=en\",\"https://redditinc.com/th/policies/data-api-terms\",\"https://redditinc.com/es-es/policies/contributor-terms-es-es-2?hsLang=th\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
-	"method": "GET",
-	"orderNo": -1740677595516,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/es-es/policies/contributor-terms-es-es-2?hsLang=th",
-	"url": "https://redditinc.com/es-es/policies/contributor-terms-es-es-2?hsLang=th"
-}

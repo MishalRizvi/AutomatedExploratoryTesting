@@ -1,9 +1,0 @@
-{
-	"id": "bJQucDWBPOeorik",
-	"json": "{\"id\":\"bJQucDWBPOeorik\",\"url\":\"https://redditinc.com/it-it/policies/developer-terms\",\"uniqueKey\":\"https://redditinc.com/it-it/policies/developer-terms\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Developer Terms\",\"currentUrl\":\"https://redditinc.com/it-it/policies/developer-terms\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"https://redditinc.com/developer-terms?hsLang=en\",\"https://redditinc.com/it-it/policies/developer-terms\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
-	"method": "GET",
-	"orderNo": -1740677643230,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/it-it/policies/developer-terms",
-	"url": "https://redditinc.com/it-it/policies/developer-terms"
-}

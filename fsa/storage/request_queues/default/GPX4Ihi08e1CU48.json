@@ -1,9 +1,0 @@
-{
-	"id": "GPX4Ihi08e1CU48",
-	"json": "{\"id\":\"GPX4Ihi08e1CU48\",\"url\":\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"loadedUrl\":\"https://redditinc.com/policies/embeds-terms\",\"uniqueKey\":\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"User Agreement\",\"currentUrl\":\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/policies/embeds-terms?hsLang=en\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-27T17:31:02.095Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/policies/embeds-terms?hsLang=en",
-	"url": "https://redditinc.com/policies/embeds-terms?hsLang=en"
-}

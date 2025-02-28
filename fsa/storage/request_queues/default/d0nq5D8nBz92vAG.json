@@ -1,9 +1,0 @@
-{
-	"id": "d0nq5D8nBz92vAG",
-	"json": "{\"id\":\"d0nq5D8nBz92vAG\",\"url\":\"https://redditinc.com/th/policies/data-api-terms\",\"loadedUrl\":\"https://redditinc.com/th/policies/data-api-terms\",\"uniqueKey\":\"https://redditinc.com/th/policies/data-api-terms\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Data API Terms\",\"currentUrl\":\"https://redditinc.com/th/policies/data-api-terms\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/bn/policies/data-api-terms?hsLang=en\",\"https://redditinc.com/th/policies/data-api-terms\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-27T17:30:03.194Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/th/policies/data-api-terms",
-	"url": "https://redditinc.com/th/policies/data-api-terms"
-}

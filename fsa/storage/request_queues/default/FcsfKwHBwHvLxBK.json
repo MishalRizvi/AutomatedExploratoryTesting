@@ -1,0 +1,9 @@
+{
+	"id": "FcsfKwHBwHvLxBK",
+	"json": "{\"id\":\"FcsfKwHBwHvLxBK\",\"url\":\"https://www.tern-group.com/contact-us\",\"loadedUrl\":\"https://www.tern-group.com/contact-us\",\"uniqueKey\":\"https://www.tern-group.com/contact-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:18:34.801Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/contact-us",
+	"url": "https://www.tern-group.com/contact-us"
+}

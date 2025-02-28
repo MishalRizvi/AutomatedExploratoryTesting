@@ -1,0 +1,9 @@
+{
+	"id": "UMX259ithNYCC9T",
+	"json": "{\"id\":\"UMX259ithNYCC9T\",\"url\":\"https://www.tern-group.com/de/impressum\",\"loadedUrl\":\"https://www.tern-group.com/de/impressum\",\"uniqueKey\":\"https://www.tern-group.com/de/impressum\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:19:03.480Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/impressum",
+	"url": "https://www.tern-group.com/de/impressum"
+}

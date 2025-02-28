@@ -1,0 +1,9 @@
+{
+	"id": "dFoM9qJzBSOBpbt",
+	"json": "{\"id\":\"dFoM9qJzBSOBpbt\",\"url\":\"https://www.tern-group.com/de/blog/mrcp-part-2-complete-guide\",\"uniqueKey\":\"https://www.tern-group.com/de/blog/mrcp-part-2-complete-guide\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738109978,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/blog/mrcp-part-2-complete-guide",
+	"url": "https://www.tern-group.com/de/blog/mrcp-part-2-complete-guide"
+}

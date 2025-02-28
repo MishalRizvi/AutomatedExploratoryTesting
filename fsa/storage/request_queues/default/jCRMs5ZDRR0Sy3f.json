@@ -1,0 +1,9 @@
+{
+	"id": "jCRMs5ZDRR0Sy3f",
+	"json": "{\"id\":\"jCRMs5ZDRR0Sy3f\",\"url\":\"https://www.tern-group.com/de/home\",\"uniqueKey\":\"https://www.tern-group.com/de/home\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738109978,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/home",
+	"url": "https://www.tern-group.com/de/home"
+}

@@ -1,9 +1,0 @@
-{
-	"id": "psAChNDDEy7ol0L",
-	"json": "{\"id\":\"psAChNDDEy7ol0L\",\"url\":\"https://redditinc.com/th/policies/previews-terms?hsLang=bn\",\"loadedUrl\":\"https://redditinc.com/bn/policies/previews-terms\",\"uniqueKey\":\"https://redditinc.com/th/policies/previews-terms?hsLang=bn\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"ডেভেলপারের জন্য শর্তাবলী\",\"currentUrl\":\"https://redditinc.com/th/policies/previews-terms?hsLang=bn\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"https://redditinc.com/developer-terms?hsLang=en\",\"https://redditinc.com/bn/policies/developer-terms\",\"https://redditinc.com/th/policies/previews-terms?hsLang=bn\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-27T17:31:05.152Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/th/policies/previews-terms?hsLang=bn",
-	"url": "https://redditinc.com/th/policies/previews-terms?hsLang=bn"
-}

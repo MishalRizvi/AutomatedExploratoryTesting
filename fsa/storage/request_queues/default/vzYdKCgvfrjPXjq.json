@@ -1,0 +1,9 @@
+{
+	"id": "vzYdKCgvfrjPXjq",
+	"json": "{\"id\":\"vzYdKCgvfrjPXjq\",\"url\":\"https://www.tern-group.com/de/blogs\",\"uniqueKey\":\"https://www.tern-group.com/de/blogs\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738109978,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/blogs",
+	"url": "https://www.tern-group.com/de/blogs"
+}

@@ -1,0 +1,9 @@
+{
+	"id": "I7IozLuqhbNGabs",
+	"json": "{\"id\":\"I7IozLuqhbNGabs\",\"url\":\"https://www.tern-group.com/de/old-home\",\"loadedUrl\":\"https://www.tern-group.com/de/old-home\",\"uniqueKey\":\"https://www.tern-group.com/de/old-home\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:18:49.539Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/old-home",
+	"url": "https://www.tern-group.com/de/old-home"
+}

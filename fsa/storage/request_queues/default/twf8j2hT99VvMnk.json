@@ -1,0 +1,9 @@
+{
+	"id": "twf8j2hT99VvMnk",
+	"json": "{\"id\":\"twf8j2hT99VvMnk\",\"url\":\"https://www.tern-group.com/uk-international-carers\",\"loadedUrl\":\"https://www.tern-group.com/uk-international-carers\",\"uniqueKey\":\"https://www.tern-group.com/uk-international-carers\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:18:40.956Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/uk-international-carers",
+	"url": "https://www.tern-group.com/uk-international-carers"
+}

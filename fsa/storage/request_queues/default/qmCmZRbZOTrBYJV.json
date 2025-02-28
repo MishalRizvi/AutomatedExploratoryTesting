@@ -1,9 +1,0 @@
-{
-	"id": "qmCmZRbZOTrBYJV",
-	"json": "{\"id\":\"qmCmZRbZOTrBYJV\",\"url\":\"https://redditinc.com/de-de/policies/previews-terms\",\"uniqueKey\":\"https://redditinc.com/de-de/policies/previews-terms\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"প্রিভিউয়ের ব্যবহারের শর্তাবলী\",\"currentUrl\":\"https://redditinc.com/de-de/policies/previews-terms\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"https://redditinc.com/developer-terms?hsLang=en\",\"https://redditinc.com/bn/policies/developer-terms\",\"https://redditinc.com/th/policies/previews-terms?hsLang=bn\",\"https://redditinc.com/de-de/policies/previews-terms\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
-	"method": "GET",
-	"orderNo": -1740677645155,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/de-de/policies/previews-terms",
-	"url": "https://redditinc.com/de-de/policies/previews-terms"
-}

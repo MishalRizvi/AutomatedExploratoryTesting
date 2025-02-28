@@ -1,330 +1,302 @@
 import { PlaywrightCrawler, Dataset } from 'crawlee';
 import { Page } from 'playwright';
+import { LLMAgent } from './LLMAgent';
 
-interface InteractionPath {
-    startUrl: string;
-    steps: string[];
-    endUrl: string;
-    isComplete: boolean;  // True if path reaches an end state
-  }
-
-  interface PageNode {
+export interface State {
     url: string;
     title: string;
-    links: string[];
-    buttons: string[];
-    forms: string[];
-    children: PageNode[];
+    interactions: {
+        links: Array<{ text: string, url: string }>;
+        buttons: Array<{ text: string, selector: string }>;
+        forms: Array<{ id: string, inputs: string[] }>;
+    };
+}
+
+interface Transition {
+    from: string;
+    to: string;
+    action: {
+        //type: 'link' | 'button' | 'form';
+        type: string;
+        context: string;
+    };
 }
 
 export class Crawler {
 
-    private requestCount: number = 0;
+    private states: Map<string, State> = new Map();
+    private transitions: Transition[] = [];
+    private visitedUrls: Set<string> = new Set();
 
-    // public paths: Array<{
-    //     parentUrl: string;
-    //     steps: Array<{
-    //         type: string;
-    //         context: string;
-    //     }>;
-    //     isComplete?: boolean;
-    //     endReason?: string;
-    // }> = [];
+    private workflows: Map<string, Set<string>> = new Map();
+    private currentWorkflowId: string | null = null;
+    private llm: LLMAgent;
+
+    constructor() {
+        this.llm = new LLMAgent();
+    }
 
     public paths: Array<{}> = []; 
 
-    // async crawl(startUrl: string, context: string, auth?: {email: string, password: string}) {
+    // async crawl(startUrl: string) {
     //     const self = this;
     //     const crawler = new PlaywrightCrawler({
-    //                     // Add configuration to handle maximum depth and prevent infinite loops
-    //         maxRequestsPerCrawl: 1000,
-    //         maxRequestRetries: 1,
-    //         requestHandlerTimeoutSecs: 60,
-    //         async requestHandler ({ page, request, enqueueLinks, log }) {
-    //             // Auto-scroll to load all content
-    //             await page.evaluate(async () => {
-    //                 await new Promise<void>((resolve) => {
-    //                     let totalHeight = 0;
-    //                     const distance = 100;
-    //                     const timer = setInterval(() => {
-    //                         const scrollHeight = document.body.scrollHeight;
-    //                         window.scrollBy(0, distance);
-    //                         totalHeight += distance;
-
-    //                         if(totalHeight >= scrollHeight){
-    //                             clearInterval(timer);
-    //                             resolve();
-    //                         }
-    //                     }, 100);
-    //                 });
-    //             });
-    //             // Wait for any dynamic content to load
-    //             await page.waitForLoadState('networkidle');
-    //             page.setDefaultTimeout(60000);
-
+    //         maxRequestsPerMinute: 10, 
+    //         async requestHandler({ request, page, enqueueLinks, log }) {
     //             const currentUrl = request.url;
     //             const currentTitle = await page.title();
-    //             log.info(`Navigating to ${currentUrl}`);     
-                
-    //             const currentPath = request.userData?.path || {
-    //                 startUrl: currentUrl,
-    //                 steps: []
-    //             };
+    //             log.info(`Processing: ${currentUrl}`);
 
-    //             // Check if we've reached an end state
-    //             const { isEnd, reason } = await self.isEndState(page, currentUrl, currentTitle);
+    //             console.log("---------------------------------REQUEST", JSON.stringify(request, null, 2));
+
+
+    //             // const links = await page.$$eval('a[href]', els => 
+    //             //     els.map(el => el.getAttribute('href')).filter(Boolean) as string[]
+    //             // );
                 
-    //             if (isEnd) {
-    //                 currentPath.isComplete = true;
-    //                 currentPath.endReason = reason;  // Store the reason
-    //                 self.paths.push(currentPath);
-    //                 log.info(`End state reached: ${reason}`);
+    //             // const buttons = await page.$$eval('button', els => 
+    //             //     els.map(el => el.textContent?.trim()).filter(Boolean) as string[]
+    //             // );
+                
+    //             // const forms = await page.$$eval('form', els => 
+    //             //     els.map(el => el.getAttribute('action')).filter(Boolean) as string[]
+    //             // );
+                
+    //             Dataset.pushData({
+    //                 url: currentUrl,
+    //                 title: currentTitle
+    //             });
+
+    //             const currentPath = request.userData?.path ?? [currentUrl];
+
+    //             const enqueuedRequests = await enqueueLinks({ 
+    //                 transformRequestFunction: (request) => {
+    //                     if (request.url.endsWith('.pdf')) return false; 
+    //                     // Get existing path or initialize empty array
+    //                     // Add current URL to path
+    //                     const updatedPath = [...currentPath, request.url];
+    //                     // Update request with new path
+    //                     request.userData = { title: currentTitle, currentUrl: request.url, path: updatedPath };
+    //                     return request;
+    //                 }, 
+    //                 forefront: true
+    //             });
+
+    //             if (enqueuedRequests.processedRequests.length <= 0) {
+    //                 //This is an end state 
+    //                 console.log("End state reached - no more requests");
+    //                 console.log("Current path:", request.userData.path);
+    //                 self.paths.push(request.userData.path); 
+    //             }
+
+    //             // Check if we're at max requests
+    //             if (self.requestCount === 20) {
+    //                 // This is an end state
+    //                 console.log("End state reached - max requests");
+    //                 console.log("Current path:", request.userData.path);
+    //                 self.paths.push(request.userData.path);
     //                 return;
     //             }
-
-    //             // Store initial state to return to after each interaction
-    //             const initialState = {
-    //                 url: currentUrl,
-    //                 path: currentPath
-    //             };
-
-    //             // 1. First, collect all interactive elements
-    //             const interactiveElements = await Promise.all([
-    //                 // Get all links
-    //                 page.getByRole('link').all().then((links: any) => 
-    //                     links.map((link: any) => ({ type: 'link', element: link }))),
-    //                 // Get all buttons
-    //                 page.getByRole('button').all().then((buttons: any) => 
-    //                     buttons.map((button: any) => ({ type: 'button', element: button }))),
-    //                 // Get all forms
-    //                 page.getByRole('form').all().then((forms: any) => 
-    //                     forms.map((form: any) => ({ type: 'form', element: form })))
-    //             ]).then(arrays => arrays.flat());
-
-    //             // 2. Try each interaction independently
-    //             for (const { type, element } of interactiveElements) {
-    //                 try {
-    //                     // Reset to initial state if needed
-    //                     if (page.url() !== initialState.url) {
-    //                         await page.goto(initialState.url);
-    //                         await page.waitForLoadState('networkidle');
-    //                     }
-
-    //                     const elementText = await element.textContent() || '';
-    //                     log.info(`Trying ${type} interaction: ${elementText}`);
-
-    //                     const newStep = { type, context: elementText };
-    //                     const updatedPath = {
-    //                         ...initialState.path,
-    //                         steps: [...initialState.path.steps, newStep]
-    //                     };
-
-    //                     // Perform the interaction based on type
-    //                     switch (type) {
-    //                         case 'link':
-    //                             console.log('link');
-    //                             await element.click();
-    //                             break;
-    //                         case 'button':
-    //                             console.log('button');
-    //                             await element.click();
-    //                             break;
-    //                         case 'form':
-    //                             console.log('form');
-    //                             const inputs = await element.getByRole('textbox').all();
-    //                             for (const input of inputs) {
-    //                                 await input.fill('test input');
-    //                             }
-    //                             await element.evaluate((f: HTMLFormElement) => f.submit());
-    //                             break;
-    //                     }
-
-    //                     await page.waitForLoadState('networkidle');
-
-    //                     // Check if interaction caused navigation
-    //                     const newUrl = page.url();
-    //                     if (newUrl !== initialState.url) {
-    //                         console.log('newUrl', newUrl);
-    //                         // Enqueue the new page with updated path
-    //                         await enqueueLinks({
-    //                             userData: {
-    //                                 path: {
-    //                                     ...updatedPath,
-    //                                     steps: [...updatedPath.steps, 
-    //                                         { type: 'navigation', context: newUrl }]
-    //                                 }
-    //                             }
-    //                         });
-    //                     } else {
-    //                         // If no navigation, look for any new interactive elements
-    //                         // that might have appeared (like expanded menus)
-    //                         await enqueueLinks({
-    //                             userData: { path: updatedPath }
-    //                         });
-    //                     }
-
-    //                 } catch (error) {
-    //                     log.error(`Error with ${type} interaction: ${error}`);
-    //                     continue;
-    //                 }
-    //             }
-    //         },
-
+    //         }
     //     });
-
-    //     await crawler.run([startUrl]);
+    //     // Create initial request with initialized userData
+    //     const initialRequest = {
+    //         url: startUrl,
+    //         userData: {
+    //             title: '',
+    //             currentUrl: startUrl,
+    //             path: [startUrl]  // Initialize with start URL
+    //         }
+    //         };
+    //     await crawler.run([initialRequest]);
+    //     console.log(self.paths);
+    //     console.log(self.requestCount);
+    //     return this.paths;
     // }
 
-    private async isEndState(page: Page, url: string, title: string): Promise<{isEnd: boolean, reason: string}> {
-        try {
-            // 1. Check for successful network responses
-            let hasSuccessResponse = false;
-            page.on('response', async (response: any) => {
-                const status = response.status();
-                const contentType = response.headers()['content-type'] || '';
-                
-                if (status === 200 && contentType.includes('application/json')) {
-                    try {
-                        const json = await response.json();
-                        if (json.success || json.status === 'success') {
-                            hasSuccessResponse = true;
-                        }
-                    } catch (e) {
-                        // Ignore parsing errors
-                    }
-                }
-            });
-
-            // 2. Check for interactive elements
-            const interactiveElements = await Promise.all([
-                page.getByRole('button').count(),
-                page.getByRole('link').count(),
-                page.getByRole('textbox').count(),
-                page.getByRole('form').count()
-            ]);
-
-            const totalInteractiveElements = interactiveElements.reduce((a, b) => a + b, 0);
-
-            if (hasSuccessResponse) {
-                return { 
-                    isEnd: true, 
-                    reason: 'Successful network response detected' 
-                };
-            }
-
-            if (totalInteractiveElements === 0) {
-                return { 
-                    isEnd: true, 
-                    reason: 'No more interactive elements found' 
-                };
-            }
-
-            return { 
-                isEnd: false, 
-                reason: 'Page still has interactive elements' 
-            };
-
-        } catch (error) {
-            console.error('Error in isEndState:', error);
-            return { 
-                isEnd: true, 
-                reason: `Error occurred: ${(error as Error).message}` 
-            };
-        }
-    }
-
     async crawl(startUrl: string) {
-        const self = this;
+        const self = this; 
+        //this.visitedUrls.add(startUrl); we might comment this back in 
         const crawler = new PlaywrightCrawler({
-            maxRequestsPerMinute: 10, 
+            maxRequestsPerCrawl: 20, 
             async requestHandler({ request, page, enqueueLinks, log }) {
                 const currentUrl = request.url;
                 const currentTitle = await page.title();
                 log.info(`Processing: ${currentUrl}`);
 
-                console.log("---------------------------------REQUEST", JSON.stringify(request, null, 2));
+                const interactions = await Promise.all([
+                    page.$$eval('a', els => els.map(el => ({ text: el.textContent?.trim() || '', url: el.getAttribute('href') || '' }))),
+                    page.$$eval('button', els => els.map(el => ({ text: el.textContent?.trim() || '', selector: el.getAttribute('selector') || '' }))),
+                    page.$$eval('form', els => els.map(el => ({ id: el.getAttribute('id') || '', inputs: Array.from(el.querySelectorAll('input')).map(input => input.getAttribute('type') || '') })))
+                ]);
 
-
-                // const links = await page.$$eval('a[href]', els => 
-                //     els.map(el => el.getAttribute('href')).filter(Boolean) as string[]
-                // );
-                
-                // const buttons = await page.$$eval('button', els => 
-                //     els.map(el => el.textContent?.trim()).filter(Boolean) as string[]
-                // );
-                
-                // const forms = await page.$$eval('form', els => 
-                //     els.map(el => el.getAttribute('action')).filter(Boolean) as string[]
-                // );
-                
-                Dataset.pushData({
+                // Create current state
+                const currentState: State = {
                     url: currentUrl,
-                    title: currentTitle
-                });
+                    title: currentTitle,
+                    interactions: {
+                        links: interactions[0],
+                        buttons: interactions[1],
+                        forms: interactions[2]
+                    }
+                };
+                self.states.set(currentUrl, currentState);
 
-                const currentPath = request.userData?.path ?? [currentUrl];
+                // Ask LLM if this page is part of current workflow
+                const { isSameWorkflow, reason } = await self.llm.call(currentUrl, currentState);
+                console.log(`\nLLM Decision for ${currentTitle}:`);
+                console.log(`Same workflow? ${isSameWorkflow}`);
+                console.log(`Reason: ${reason}\n`);
+
+                if (!isSameWorkflow) {
+                    // Start new workflow
+                    self.currentWorkflowId = crypto.randomUUID();
+                    self.workflows.set(self.currentWorkflowId, new Set([currentUrl]));
+                    console.log(`Starting new workflow: ${self.currentWorkflowId}`);
+                }
+                else if (self.currentWorkflowId) {
+                    // Add to existing workflow
+                    self.workflows.get(self.currentWorkflowId)?.add(currentUrl);
+                    console.log(`Added to workflow: ${self.currentWorkflowId}`);
+                }
+
+                // Print current FSA state after each page
+                console.log("\n=== Current FSA State ===");
+                self.printFSA();
+                console.log("========================\n");
 
                 const enqueuedRequests = await enqueueLinks({ 
                     transformRequestFunction: (request) => {
-                        if (request.url.endsWith('.pdf')) return false; 
-                        // Get existing path or initialize empty array
-                        // Add current URL to path
-                        const updatedPath = [...currentPath, request.url];
-                        // Update request with new path
-                        request.userData = { title: currentTitle, currentUrl: request.url, path: updatedPath };
+                        if (request.url.endsWith('.pdf')) return false;
+                        if (self.visitedUrls.has(request.url)) return false;
+                        self.transitions.push({
+                            from: currentUrl,
+                            to: request.url,
+                            action: {
+                                type: 'link',
+                                context: request.url
+                            }
+                        });
+
+                        self.visitedUrls.add(request.url);
                         return request;
-                    }, 
+                    },
                     forefront: true
-                });
-
-                if (enqueuedRequests.processedRequests.length <= 0) {
-                    //This is an end state 
-                    console.log("End state reached - no more requests");
-                    console.log("Current path:", request.userData.path);
-                    self.paths.push(request.userData.path); 
-                }
-
-                // Check if we're at max requests
-                if (self.requestCount === 20) {
-                    // This is an end state
-                    console.log("End state reached - max requests");
-                    console.log("Current path:", request.userData.path);
-                    self.paths.push(request.userData.path);
-                    return;
-                }
+                });   
             }
-        });
-        // Create initial request with initialized userData
-        const initialRequest = {
-            url: startUrl,
-            userData: {
-                title: '',
-                currentUrl: startUrl,
-                path: [startUrl]  // Initialize with start URL
-            }
-            };
-        await crawler.run([initialRequest]);
-        console.log(self.paths);
-        console.log(self.requestCount);
-        return this.paths;
+        })
+        await crawler.run([startUrl]);
+        return self.generatePaths(); 
     }
 
-    printTree(node: PageNode, level = 0) {
-        const indent = '  '.repeat(level);
-        console.log(`${indent}📄 ${node.title} (${node.url})`);
+    generatePaths() {
+        const paths: string[][] = [];
+        const visited = new Set<string>();
+
+        const dfs = (currentUrl: string, currentPath: string[]) => {
+            if (visited.has(currentUrl)) return;
+            visited.add(currentUrl);
+
+            const state = this.states.get(currentUrl);
+            if (!state) return;
+
+            paths.push([...currentPath]);
+
+            // Find all transitions from this state
+            const outgoingTransitions = this.transitions.filter(t => t.from === currentUrl);
+            for (const transition of outgoingTransitions) {
+                dfs(transition.to, [...currentPath, transition.to]);
+            }
+        };
+
+        // Start DFS from all entry points
+        const startStates = Array.from(this.states.keys());
+        for (const startUrl of startStates) {
+            dfs(startUrl, [startUrl]);
+        }
+
+        return paths;
+    }
+
+    printFSA() {
+        console.log('\nStates:');
+        this.states.forEach((state, url) => {
+            console.log(`\nState: ${state.title} (${url})`);
+            console.log(`├─ Links: ${state.interactions.links.length}`);
+            console.log(`├─ Buttons: ${state.interactions.buttons.length}`);
+            console.log(`└─ Forms: ${state.interactions.forms.length}`);
+        });
+
+        console.log('\nTransitions:');
+        this.transitions.forEach(t => {
+            console.log(`${t.from} --[${t.action.type}: ${t.action.context}]--> ${t.to}`);
+        });
+    }
+
+    generateInteractionSequences() {
+        const sequences: string[] = [];
+        const baseUrl = new URL(Array.from(this.states.keys())[0]).origin;
         
-        if (node.buttons.length > 0) {
-            console.log(`${indent}  🔘 Buttons: ${node.buttons.length}`);
-        }
-        if (node.forms.length > 0) {
-            console.log(`${indent}  📝 Forms: ${node.forms.length}`);
-        }
-        if (node.links.length > 0) {
-            console.log(`${indent}  🔗 Links: ${node.links.length}`);
-        }
-
-        node.children.forEach(child => {
-            this.printTree(child, level + 1);
+        this.transitions.forEach(t => {
+            const fromState = this.states.get(t.from);
+            const toState = this.states.get(t.to);
+            
+            if (fromState && toState) {
+                // Skip self-references
+                if (fromState.url === toState.url) return;
+                
+                // Clean up titles (remove common website suffix/prefix)
+                const commonSuffix = fromState.title.split('|').pop()?.trim();
+                const fromTitle = commonSuffix ? 
+                    fromState.title.replace(`| ${commonSuffix}`, '').trim() : 
+                    fromState.title;
+                const toTitle = commonSuffix ? 
+                    toState.title.replace(`| ${commonSuffix}`, '').trim() : 
+                    toState.title;
+                
+                sequences.push(`${fromTitle} → ${toTitle}`);
+            }
         });
+
+        // Sort and remove duplicates
+        return [...new Set(sequences)].sort();
     }
+
+    generateWorkflowPaths() {
+        const workflowPaths: Record<string, string[][]> = {};
+
+        this.workflows.forEach((urls, workflowId) => {
+            const paths: string[][] = [];
+            const visited = new Set<string>();
+
+            const dfs = (currentUrl: string, currentPath: string[]) => {
+                if (visited.has(currentUrl)) return;
+                if (!urls.has(currentUrl)) return;
+                
+                visited.add(currentUrl);
+                const state = this.states.get(currentUrl);
+                if (!state) return;
+
+                paths.push([...currentPath]);
+
+                // Only follow transitions within this workflow
+                const outgoingTransitions = this.transitions
+                    .filter(t => t.from === currentUrl && urls.has(t.to));
+
+                for (const transition of outgoingTransitions) {
+                    dfs(transition.to, [...currentPath, transition.to]);
+                }
+            };
+
+            // Start from each URL in the workflow
+            Array.from(urls).forEach(url => {
+                dfs(url, [url]);
+            });
+
+            workflowPaths[workflowId] = paths;
+        });
+
+        return workflowPaths;
+    }
+
 }

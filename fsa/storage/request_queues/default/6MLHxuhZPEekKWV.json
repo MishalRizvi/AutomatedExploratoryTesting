@@ -1,0 +1,9 @@
+{
+	"id": "6MLHxuhZPEekKWV",
+	"json": "{\"id\":\"6MLHxuhZPEekKWV\",\"url\":\"https://www.tern-group.com/de/jobs\",\"loadedUrl\":\"https://www.tern-group.com/de/jobs\",\"uniqueKey\":\"https://www.tern-group.com/de/jobs\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:18:57.736Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/jobs",
+	"url": "https://www.tern-group.com/de/jobs"
+}

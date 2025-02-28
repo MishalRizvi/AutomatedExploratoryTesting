@@ -1,0 +1,9 @@
+{
+	"id": "C9EFvjGylMOh69c",
+	"json": "{\"id\":\"C9EFvjGylMOh69c\",\"url\":\"https://www.tern-group.com/de/blog/brutto--und-nettogehalt-in-der-deutschen-pflege-so-wird-es-berechnet\",\"loadedUrl\":\"https://www.tern-group.com/de/blog/brutto--und-nettogehalt-in-der-deutschen-pflege-so-wird-es-berechnet\",\"uniqueKey\":\"https://www.tern-group.com/de/blog/brutto--und-nettogehalt-in-der-deutschen-pflege-so-wird-es-berechnet\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":1,\"errorMessages\":[\"SyntaxError: Bad control character in string literal in JSON at position 376 (line 3 column 347)\\n    at JSON.parse (<anonymous>)\\n    at LLMAgent.call (webpack-internal:///(rsc)/./src/services/LLMAgent.ts:55:29)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\\n    at async PlaywrightCrawler.requestHandler [as userProvidedRequestHandler] (webpack-internal:///(rsc)/./src/services/Crawler.ts:122:52)\\n    at async wrap (/Users/mishalrizvi/Projects/AutomatedExploratoryTesting/fsa/node_modules/@apify/timeout/cjs/index.cjs:54:21)\"],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":5}}}",
+	"method": "GET",
+	"orderNo": 1740737934042,
+	"retryCount": 1,
+	"uniqueKey": "https://www.tern-group.com/de/blog/brutto--und-nettogehalt-in-der-deutschen-pflege-so-wird-es-berechnet",
+	"url": "https://www.tern-group.com/de/blog/brutto--und-nettogehalt-in-der-deutschen-pflege-so-wird-es-berechnet"
+}

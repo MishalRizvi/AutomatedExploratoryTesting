@@ -1,0 +1,9 @@
+{
+	"id": "7cbQI6cy4fT1yka",
+	"json": "{\"id\":\"7cbQI6cy4fT1yka\",\"url\":\"https://www.tern-group.com/de/german-nurses\",\"loadedUrl\":\"https://www.tern-group.com/de/german-nurses\",\"uniqueKey\":\"https://www.tern-group.com/de/german-nurses\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:18:44.253Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/german-nurses",
+	"url": "https://www.tern-group.com/de/german-nurses"
+}

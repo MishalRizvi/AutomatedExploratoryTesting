@@ -1,9 +1,0 @@
-{
-	"id": "BwEgOUHxVTNWgJQ",
-	"json": "{\"id\":\"BwEgOUHxVTNWgJQ\",\"url\":\"https://redditinc.com/policies/transparency-report-2019#text-content1\",\"loadedUrl\":\"https://redditinc.com/policies/transparency-report-2019#text-content1\",\"uniqueKey\":\"https://redditinc.com/policies/transparency-report-2019\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"Transparency Report 2019 - Reddit\",\"currentUrl\":\"https://redditinc.com/policies/transparency-report-2019#text-content1\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/policies/embeds-terms?hsLang=en\",\"https://redditinc.com/developer-terms?hsLang=en\",\"https://redditinc.com/bn/policies/developer-terms\",\"https://redditinc.com/policies/transparency?hsLang=bn\",\"https://redditinc.com/policies/transparency-report-2019?hsLang=en\",\"https://redditinc.com/policies/transparency-report-2019#text-content1\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-27T17:33:06.806Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/policies/transparency-report-2019",
-	"url": "https://redditinc.com/policies/transparency-report-2019#text-content1"
-}

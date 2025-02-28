@@ -1,9 +1,0 @@
-{
-	"id": "K3taha7U5sL4hUX",
-	"json": "{\"id\":\"K3taha7U5sL4hUX\",\"url\":\"https://redditinc.com/fr-fr/policies/user-agreement\",\"uniqueKey\":\"https://redditinc.com/fr-fr/policies/user-agreement\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"title\":\"User Agreement\",\"currentUrl\":\"https://redditinc.com/fr-fr/policies/user-agreement\",\"path\":[\"https://redditinc.com/blog/reddit-and-intercontinental-exchange-collaborate-to-research-build-and-offer-new-data-and-analytics-products-for-the-financial-industry\",\"https://redditinc.com/policies/user-agreement\",\"https://redditinc.com/fr-fr/policies/user-agreement\"],\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
-	"method": "GET",
-	"orderNo": -1740677581705,
-	"retryCount": 0,
-	"uniqueKey": "https://redditinc.com/fr-fr/policies/user-agreement",
-	"url": "https://redditinc.com/fr-fr/policies/user-agreement"
-}

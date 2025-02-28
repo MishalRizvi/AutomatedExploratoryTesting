@@ -1,0 +1,9 @@
+{
+	"id": "rKieJqDG8AjMCb4",
+	"json": "{\"id\":\"rKieJqDG8AjMCb4\",\"url\":\"https://www.tern-group.com/de/www.linkedin.com/in/hritik-sharma-65819523a\",\"loadedUrl\":\"https://www.tern-group.com/de/www.linkedin.com/in/hritik-sharma-65819523a\",\"uniqueKey\":\"https://www.tern-group.com/de/www.linkedin.com/in/hritik-sharma-65819523a\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\",\"state\":4}},\"handledAt\":\"2025-02-28T10:18:57.138Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/www.linkedin.com/in/hritik-sharma-65819523a",
+	"url": "https://www.tern-group.com/de/www.linkedin.com/in/hritik-sharma-65819523a"
+}

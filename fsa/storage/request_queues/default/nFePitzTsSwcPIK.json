@@ -1,0 +1,9 @@
+{
+	"id": "nFePitzTsSwcPIK",
+	"json": "{\"id\":\"nFePitzTsSwcPIK\",\"url\":\"https://www.tern-group.com\",\"loadedUrl\":\"https://www.tern-group.com/\",\"uniqueKey\":\"https://www.tern-group.com\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2025-02-28T10:18:31.123Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com",
+	"url": "https://www.tern-group.com"
+}

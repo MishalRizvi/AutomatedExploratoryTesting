@@ -1,0 +1,9 @@
+{
+	"id": "hWn5JpJXYHB6eDd",
+	"json": "{\"id\":\"hWn5JpJXYHB6eDd\",\"url\":\"https://www.tern-group.com/de/ueber-uns\",\"uniqueKey\":\"https://www.tern-group.com/de/ueber-uns\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-hostname\"}}}",
+	"method": "GET",
+	"orderNo": -1740738109978,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/ueber-uns",
+	"url": "https://www.tern-group.com/de/ueber-uns"
+}
