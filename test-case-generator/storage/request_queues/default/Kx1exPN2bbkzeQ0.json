@@ -1,0 +1,9 @@
+{
+	"id": "Kx1exPN2bbkzeQ0",
+	"json": "{\"id\":\"Kx1exPN2bbkzeQ0\",\"url\":\"https://hubeali.com/category/medicine/\",\"uniqueKey\":\"https://hubeali.com/category/medicine\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741042618062,
+	"retryCount": 0,
+	"uniqueKey": "https://hubeali.com/category/medicine",
+	"url": "https://hubeali.com/category/medicine/"
+}

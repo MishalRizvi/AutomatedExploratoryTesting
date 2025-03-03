@@ -1,0 +1,59 @@
+{
+  "requestsFinished": 27,
+  "requestsFailed": 0,
+  "requestsRetries": 4,
+  "requestsFailedPerMinute": 0,
+  "requestsFinishedPerMinute": 5,
+  "requestMinDurationMillis": 25591,
+  "requestMaxDurationMillis": 61202,
+  "requestTotalFailedDurationMillis": 0,
+  "requestTotalFinishedDurationMillis": 1204201,
+  "crawlerStartedAt": "2025-03-03T22:55:35.128Z",
+  "crawlerFinishedAt": "2025-03-03T23:00:36.071Z",
+  "statsPersistedAt": "2025-03-03T23:00:36.071Z",
+  "crawlerRuntimeMillis": 301190,
+  "crawlerLastStartTimestamp": 1741042534881,
+  "requestRetryHistogram": [
+    23,
+    3,
+    1
+  ],
+  "statsId": 0,
+  "requestAvgFailedDurationMillis": null,
+  "requestAvgFinishedDurationMillis": 44600,
+  "requestTotalDurationMillis": 1204201,
+  "requestsTotal": 27,
+  "requestsWithStatusCode": {
+    "200": 56
+  },
+  "errors": {},
+  "retryErrors": {
+    "/Users/mishalrizvi/Projects/AutomatedExploratoryTesting/test-case-generator/node_modules/@apify/timeout/cjs/index.cjs:64:68": {
+      "missing error code": {
+        "Error": {
+          "requestHandler timed out after 60 seconds.": {
+            "count": 27
+          }
+        }
+      }
+    },
+    "/Users/mishalrizvi/Projects/AutomatedExploratoryTesting/test-case-generator/node_modules/@crawlee/playwright/internals/utils/playwright-utils.js:165:17": {
+      "missing error code": {
+        "Error": {
+          "page.goto: net::ERR_ABORTED at http://hubeali.com/Calendar/Calendar2025-26.pdf": {
+            "count": 3
+          }
+        }
+      }
+    },
+    "rsc": {
+      "context_length_exceeded": {
+        "Error": {
+          "400 This model's maximum context length is 128000 tokens. However, your messages resulted in _ tokens. Please reduce the length of the messages.": {
+            "count": 2
+          }
+        }
+      }
+    }
+  }
+}

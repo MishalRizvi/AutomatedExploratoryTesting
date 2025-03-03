@@ -1,0 +1,9 @@
+{
+	"id": "rl3WgnUZAf0ZLhX",
+	"json": "{\"id\":\"rl3WgnUZAf0ZLhX\",\"url\":\"https://hubeali.com/tag/earrings/\",\"uniqueKey\":\"https://hubeali.com/tag/earrings\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741042726540,
+	"retryCount": 0,
+	"uniqueKey": "https://hubeali.com/tag/earrings",
+	"url": "https://hubeali.com/tag/earrings/"
+}

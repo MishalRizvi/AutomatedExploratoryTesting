@@ -1,0 +1,9 @@
+{
+	"id": "uBYb2NnvUbog1mV",
+	"json": "{\"id\":\"uBYb2NnvUbog1mV\",\"url\":\"https://hubeali.com/category/books/english-books/\",\"uniqueKey\":\"https://hubeali.com/category/books/english-books\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741042618052,
+	"retryCount": 0,
+	"uniqueKey": "https://hubeali.com/category/books/english-books",
+	"url": "https://hubeali.com/category/books/english-books/"
+}

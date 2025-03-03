@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { LLMGuidedCrawler } from '@/services/llm-crawler'; 
 import { TestCaseGenerator, TestCase } from '@/services/test-case-generator'; 
-import { LLMCrawler } from '@/services/llm-crawler-2';
+import { Phase1 } from '@/services/phase-1';
 
 interface WebsiteRequest { 
     url: string; 
@@ -25,30 +25,34 @@ export async function POST(request: Request) {
 
         //Initialise crawler and explore website 
 
-        const crawler = new LLMCrawler(process.env.OPENAI_API_KEY || "", {
-            credentials: data.requiresAuth ? {
-                username: data.username || "",
-                password: data.password || ""
-            } : undefined,
-            websiteContext: data.websiteContext || ""
-        });
-        const workflows= await crawler.exploreWebsite(data.url, data.websiteContext || "Explore the website and all possible user interaction flows"); 
+        const phase1 = new Phase1(
+            process.env.OPENAI_API_KEY || "",
+            data.websiteContext || "",
+            {
+                username: data.username,
+                password: data.password,
+                requiresAuth: data.requiresAuth
+            }
+        );
+        await phase1.crawl(data.url); 
+        console.log("Phase 1 completed");
+        console.log("Printing results - msg from route"); 
+        phase1.printResults(); 
 
-        // const testGenerator = new TestCaseGenerator(); 
-        // const testCases = testGenerator.generateTestCases(explorationPath); 
         return NextResponse.json({
             status: "success",
             data: {
                 url: data.url,
                 summary: {
-                    totalWorkflows: workflows.length,
-                    workflowNames: workflows.map(w => w.name),
+                    totalWorkflows: phase1.links.length,
+                    workflowNames: phase1.links.map(w => w.url),
                 },
-                workflows: workflows.map(workflow => ({
-                    name: workflow.name,
-                    description: workflow.description,
-                    startUrl: workflow.startUrl,
-                    actions: workflow.actions
+                workflows: phase1.links.map((linkComponent: any) => ({
+                    name: linkComponent.name,
+                    description: linkComponent.description,
+                    startUrl: linkComponent.startUrl,
+                    actions: linkComponent.actions,
+                    inputs: linkComponent.inputs  // Add inputs to the response if Phase1 provides them
                 }))
             }
         });

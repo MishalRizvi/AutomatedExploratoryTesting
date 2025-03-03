@@ -1,0 +1,9 @@
+{
+	"id": "r13ZBwTzqSirdWe",
+	"json": "{\"id\":\"r13ZBwTzqSirdWe\",\"url\":\"https://hubeali.com/article/fish_prawn_shrimp/\",\"uniqueKey\":\"https://hubeali.com/article/fish_prawn_shrimp\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741042789320,
+	"retryCount": 0,
+	"uniqueKey": "https://hubeali.com/article/fish_prawn_shrimp",
+	"url": "https://hubeali.com/article/fish_prawn_shrimp/"
+}

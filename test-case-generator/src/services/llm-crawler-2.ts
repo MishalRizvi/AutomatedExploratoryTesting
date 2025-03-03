@@ -1,6 +1,8 @@
 import { chromium, ElementHandle, Page } from 'playwright';
 import OpenAI from 'openai'
 import { createHash } from 'crypto';
+import { ElementFinderAgent } from '../lib/agents/elementFinderAgent';
+
 import * as cheerio from 'cheerio';
 interface Credentials {
     username: string; 
@@ -36,6 +38,45 @@ interface WorkflowResponse {
         name: string;
         description: string;
     }>;
+}
+
+interface VisualLocation {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+interface VisualProperties {
+    backgroundColor: string;
+    fontSize: string;
+    isClickable: boolean;
+}
+
+interface VisualConfirmation {
+    expectedType: string;
+    expectedLocation: VisualLocation;
+    expectedVisuals: VisualProperties;
+}
+
+interface WaitOptions {
+    timeout: number;
+    waitForState: 'attached' | 'visible' | 'hidden';
+    expectsNavigation: boolean;
+}
+
+interface Action {
+    type: string;
+    selector: string;
+    value: string;
+    visualConfirmation: VisualConfirmation;
+    waitForOptions: WaitOptions;
+}
+
+interface ActionResponse {
+    nextAction: Action;
+    status: 'CONTINUE' | 'COMPLETE';
+    reasoning: string;
 }
 
 export class LLMCrawler {
@@ -74,6 +115,69 @@ export class LLMCrawler {
         }
     }
 
+    private async getInteractiveElements(page: Page) {
+        const elements = [];
+    
+        // Get elements with their visual properties
+        const elementInfo = await page.evaluate(() => {
+            return Array.from(document.querySelectorAll('input, button, a, select, textarea')).map(el => {
+                const rect = el.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(el);
+                
+                return {
+                    type: el.tagName.toLowerCase(),
+                    inputType: el.getAttribute('type'),
+                    name: el.getAttribute('name'),
+                    id: el.getAttribute('id'),
+                    placeholder: el.getAttribute('placeholder'),
+                    value: el.getAttribute('value'),
+                    text: el.textContent?.trim(),
+                    isVisible: (el as HTMLElement).offsetParent !== null,
+                    attributes: {
+                        name: el.getAttribute('name'),
+                        type: el.getAttribute('type'),
+                        placeholder: el.getAttribute('placeholder'),
+                        'data-testid': el.getAttribute('data-testid'),
+                        role: el.getAttribute('role')
+                    },
+                    visualProperties: {
+                        x: Math.round(rect.x),
+                        y: Math.round(rect.y),
+                        width: Math.round(rect.width),
+                        height: Math.round(rect.height),
+                        backgroundColor: computedStyle.backgroundColor,
+                        color: computedStyle.color,
+                        fontSize: computedStyle.fontSize,
+                        isButton: computedStyle.cursor === 'pointer'
+                    }
+                };
+            }).filter(el => el.isVisible);
+        });
+
+            // Process elements and generate selectors
+        for (const el of elementInfo) {
+            let selector;
+            if (el.type === 'input') {
+                if (el.attributes.name) {
+                    selector = `input[name="${el.attributes.name}"]`;
+                } else if (el.placeholder) {
+                    selector = `input[placeholder="${el.placeholder}"]`;
+                } else if (el.id) {
+                    selector = `#${el.id}`;
+                }
+            }
+
+            elements.push({
+                ...el,
+                selector
+            });
+        }
+
+        return elements; 
+    }
+
+
+
     private async exploreCurrentPage(page: Page, visitedUrls: Set<string>): Promise<void> {
         const currentUrl = page.url(); 
 
@@ -88,7 +192,7 @@ export class LLMCrawler {
         //Create new navigation state for this URL 
         const currentState: NavigationState = {
             url: currentUrl, 
-            workflows: await this.workflowStarterAgent(await this.capturePageState(page)),
+            workflows: await this.workflowStarterAgent(page),
             completed: new Set<string>(), 
         }; 
 
@@ -138,89 +242,93 @@ export class LLMCrawler {
 
     private async capturePageState(page: Page): Promise<PageState> {
         try {
-            //Wait for page to be ready 
-            await page.waitForLoadState('networkidle'); 
-
-            //Capture all state in parallel for efficiency 
+            // Wait for page to be ready 
+            await page.waitForLoadState('networkidle');
+    
+            // Set a reasonable viewport size if not already set
+            await page.setViewportSize({ width: 1280, height: 720 });
+    
+            // Capture all state in parallel for efficiency 
             const [screenshot, html, url] = await Promise.all([
                 page.screenshot({
-                    type: 'jpeg', 
-                    quality: 50, 
-                    fullPage: true
-                }).then(buffer => buffer.toString('base64')), 
-                page.content(), 
+                    type: 'jpeg',
+                    quality: 30,  // Reduced quality
+                    fullPage: false,  // Only viewport
+                }).then(async buffer => {
+                    // Further compress with sharp
+                    const sharp = require('sharp');
+                    const optimized = await sharp(buffer)
+                        .resize({
+                            width: 800,  // Max width
+                            height: 600,  // Max height
+                            fit: 'inside',
+                            withoutEnlargement: true
+                        })
+                        .jpeg({
+                            quality: 30,
+                            mozjpeg: true,  // Better compression
+                            chromaSubsampling: '4:2:0'  // Reduce color data
+                        })
+                        .toBuffer();
+                    return optimized.toString('base64');
+                }),
+                // Minimize HTML by removing unnecessary elements
+                page.evaluate(() => {
+                    // Remove scripts, styles, and other heavy elements
+                    const doc = document.cloneNode(true) as Document;
+                    const elementsToRemove = [
+                        'script',
+                        'style',
+                        'link',
+                        'meta',
+                        'noscript',
+                        'iframe',
+                        'svg',
+                        'img',
+                        'video',
+                        'audio'
+                    ];
+                    elementsToRemove.forEach(tag => {
+                        doc.querySelectorAll(tag).forEach(el => el.remove());
+                    });
+                    // Remove all comments
+                    const removeComments = (node: Node) => {
+                        for (let i = node.childNodes.length-1; i >= 0; i--) {
+                            const child = node.childNodes[i];
+                            if (child.nodeType === 8) { // Comment node
+                                child.remove();
+                            } else if (child.nodeType === 1) { // Element node
+                                removeComments(child);
+                            }
+                        }
+                    };
+                    removeComments(doc);
+                    return doc.documentElement.outerHTML;
+                }),
                 page.url()
-            ]); 
-
+            ]);
+    
             return {
                 url,
-                screenshot, 
-                html
-            }
-        }
-        catch(error) {
-            console.error('Error capturing page state:', error); 
-            throw error; 
+                screenshot,
+                html: html.trim()  // Remove extra whitespace
+            };
+        } catch (error) {
+            console.error('Error capturing page state:', error);
+            throw error;
         }
     }
 
-    private async workflowStarterAgent(state: PageState): Promise<Array<{name: string, description: string}>> {
+    private async workflowStarterAgent(page: Page): Promise<Array<{name: string, description: string}>> {
+        const state = await this.capturePageState(page); 
+        const interactiveElements = await this.getInteractiveElements(page); 
         
         const credentialsContext = this.credentials 
             ? `Available test credentials:
                - Username: ${this.credentials.username}
                - Password: ${this.credentials.password}
                Use these credentials when login or authentication is needed.`
-            : 'No test credentials provided. Skip workflows requiring authentication.';
-
-        
-        // Trim HTML to essential parts
-        const $ = cheerio.load(state.html);
-        
-        // Remove heavy/unnecessary elements
-        $('script').remove();
-        $('style').remove();
-        $('svg').remove();
-        $('meta').remove();
-        $('link').remove();
-        $('noscript').remove();
-        $('iframe').remove();
-        $('img').remove();
-
-        // Focus on interactive elements and their context
-        const interactiveElements = {
-            forms: $('form').map((_, form) => {
-                const $form = $(form);
-                return {
-                    id: $form.attr('id'),
-                    class: $form.attr('class'),
-                    inputs: $form.find('input, select, textarea').map((_, input) => ({
-                        type: $(input).attr('type'),
-                        name: $(input).attr('name'),
-                        placeholder: $(input).attr('placeholder'),
-                        label: $(input).attr('aria-label') || $(`label[for="${$(input).attr('id')}"]`).text().trim()
-                    })).get(),
-                    buttons: $form.find('button').map((_, btn) => $(btn).text().trim()).get()
-                };
-            }).get(),
-            buttons: $('button').map((_, btn) => ({
-                text: $(btn).text().trim(),
-                type: $(btn).attr('type'),
-                id: $(btn).attr('id'),
-                class: $(btn).attr('class')
-            })).get(),
-            links: $('a[href]').map((_, link) => ({
-                text: $(link).text().trim(),
-                href: $(link).attr('href'),
-                id: $(link).attr('id'),
-                class: $(link).attr('class')
-            })).get(),
-            // Include important headings for context
-            headings: $('h1, h2, h3').map((_, h) => ({
-                level: h.name,
-                text: $(h).text().trim()
-            })).get()
-        };    
+            : 'No test credentials provided. Skip workflows requiring authentication, such as login or account creation.';
 
         const prompt = `
             Website context: ${this.websiteContext}
@@ -229,19 +337,21 @@ export class LLMCrawler {
             Given this webpage: 
             URL: ${state.url}
 
+            Given this webpage screenshot and interactive elements: 
+            <screenshot>
+                ${state.screenshot}
+            </screenshot>
 
-            Page Structure:
-            ${interactiveElements.headings.map(h => `${h.level}: ${h.text}`).join('\n')}
-
-            Forms:
-            ${JSON.stringify(interactiveElements.forms, null, 2)}
-
-            Buttons:
-            ${JSON.stringify(interactiveElements.buttons, null, 2)}
-
-            Links:
-            ${JSON.stringify(interactiveElements.links, null, 2)}
-
+            Visual Layout of Interactive Elements:
+            ${interactiveElements.map(el => `
+                ${el.type.toUpperCase()} at (${el.visualProperties.x}, ${el.visualProperties.y}):
+                - Type: ${el.type} ${el.inputType ? `(${el.inputType})` : ''}
+                - Text/Placeholder: ${el.text || el.placeholder || 'None'}
+                - Size: ${el.visualProperties.width}x${el.visualProperties.height}
+                - Selector: ${el.selector}
+                - Visual: ${el.visualProperties.backgroundColor} text, ${el.visualProperties.fontSize} size
+                ${el.visualProperties.isButton ? '- Appears clickable (cursor: pointer)' : ''}
+            `).join('\n')}
 
             You are an expert at identifying possible user interaction workflows on web applications. 
             Your task is to use the elements on the page to identify ALL possible workflows that can be started from here. 
@@ -263,6 +373,28 @@ export class LLMCrawler {
             - workflows that require multiple page navigations to start 
             - "view-profile" - if it just viewing content 
             - "navigate-to-dashboard" - if it is just a link to another page 
+
+            Prioritize workflows that match these categories:
+            1. Authentication Flows:
+            - Find and use the Login/Signup buttons 
+            - Use provided credentials: ${this.credentials?.username} and ${this.credentials?.password}
+
+            2. Core User Actions: 
+            - Create/Edit/Delete operations 
+            - Form submissions 
+            - Dashboard interactions 
+            - Profile management 
+
+            3. Business-Critical Flows:
+            - Job posting (for recruiters)
+            - Application submission (for candidates)
+            - Booking/Scheduling features 
+
+            4. Secondary Actions:
+            - Settings changes 
+            - Preference updates
+            - Notification management 
+
 
             Return array of workflows as a JSON array with this format:
             {
@@ -316,77 +448,30 @@ export class LLMCrawler {
         while (true) {
             try {
                 const state = await this.capturePageState(page); 
-
-                // Trim HTML to essential parts
-                const $ = cheerio.load(state.html);
-                
-                // Remove heavy/unnecessary elements
-                $('script').remove();
-                $('style').remove();
-                $('svg').remove();
-                $('meta').remove();
-                $('link').remove();
-                $('noscript').remove();
-                $('iframe').remove();
-                $('img').remove();
-
-                const interactiveElements = {
-                    forms: $('form').map((_, form) => {
-                        const $form = $(form);
-                        return {
-                            id: $form.attr('id'),
-                            class: $form.attr('class'),
-                            inputs: $form.find('input, select, textarea').map((_, input) => ({
-                                type: $(input).attr('type'),
-                                name: $(input).attr('name'),
-                                placeholder: $(input).attr('placeholder'),
-                                label: $(input).attr('aria-label') || $(`label[for="${$(input).attr('id')}"]`).text().trim()
-                            })).get(),
-                            buttons: $form.find('button').map((_, btn) => $(btn).text().trim()).get()
-                        };
-                    }).get(),
-                    buttons: $('button').map((_, btn) => ({
-                        text: $(btn).text().trim(),
-                        type: $(btn).attr('type'),
-                        id: $(btn).attr('id'),
-                        class: $(btn).attr('class')
-                    })).get(),
-                    links: $('a[href]').map((_, link) => ({
-                        text: $(link).text().trim(),
-                        href: $(link).attr('href'),
-                        id: $(link).attr('id'),
-                        class: $(link).attr('class')
-                    })).get(),
-                    // Include important headings for context
-                    headings: $('h1, h2, h3').map((_, h) => ({
-                        level: h.name,
-                        text: $(h).text().trim()
-                    })).get()
-                };
-        
+                const interactiveElements = await this.getInteractiveElements(page); 
 
                 const credentialsContext = this.credentials 
                 ? `Use these credentials if needed:
                    Username: ${this.credentials.username}
                    Password: ${this.credentials.password}`
-                : 'No credentials available';
+                : 'No credentials available - skip any actions that require authentication such as login or account creation';
 
                 const nextActionPrompt = `
-                    Given this webpage: 
-                    URL: ${state.url}
+                    Given this webpage screenshot and interactive elements: 
+                    <screenshot>
+                        ${state.screenshot}
+                    </screenshot>
 
-                    
-                    Page Structure:
-                    ${interactiveElements.headings.map(h => `${h.level}: ${h.text}`).join('\n')}
-
-                    Forms:
-                    ${JSON.stringify(interactiveElements.forms, null, 2)}
-
-                    Buttons:
-                    ${JSON.stringify(interactiveElements.buttons, null, 2)}
-
-                    Links:
-                    ${JSON.stringify(interactiveElements.links, null, 2)}
+                    Visual Layout of Interactive Elements:
+                    ${interactiveElements.map(el => `
+                        ${el.type.toUpperCase()} at (${el.visualProperties.x}, ${el.visualProperties.y}):
+                        - Type: ${el.type} ${el.inputType ? `(${el.inputType})` : ''}
+                        - Text/Placeholder: ${el.text || el.placeholder || 'None'}
+                        - Size: ${el.visualProperties.width}x${el.visualProperties.height}
+                        - Selector: ${el.selector}
+                        - Visual: ${el.visualProperties.backgroundColor} text, ${el.visualProperties.fontSize} size
+                        ${el.visualProperties.isButton ? '- Appears clickable (cursor: pointer)' : ''}
+                    `).join('\n')}
 
                     Authentication context: ${credentialsContext}
 
@@ -395,59 +480,181 @@ export class LLMCrawler {
                     Previous actions taken: 
                     ${actions.length > 0 ? actions.join('\n') : 'No actions taken yet'}
 
-                    What is the next action to take?
-                    Consider:
-                    1. Use clear selectors (id, data-testid, aria-label, or visible text)
-                    2. Prefer role-based selectors when available 
-                    3. Handle any required form inputs 
-                    4. Wait for elements when needed 
+                    Choose the next action to take based on the visual layout and workflow context:
+                    1. Choose elements that are clearly visible in the UI
+                    2. Prefer elements that look interactive (buttons, inputs)
+                    3. Use exact selectors from the interactiveElements list above
+                    4. Consider the spatial layout when choosing next actions
+                    5. Choose actions that are most likely to progress the workflow forward
+
+                    If the workflow is complete, return a "COMPLETE" status. 
+
+                    SUPPORTED ACTION TYPES:
+                    - "click": Click an element
+                    - "fill": Fill a form field
+                    - "press": Press a keyboard key
+                    - "check": Check a checkbox
+                    - "uncheck": Uncheck a checkbox
+                    - "selectOption": Select from dropdown
+                    - "hover": Hover over element
+                    - "dblclick": Double click element
+                    - "focus": Focus an element
+                    - "type": Type into an element
+                    - "keyboard.press": Press a specific key
+                    - "keyboard.type": Type a sequence of keys
+                    - "mouse.click": Click at specific coordinates
+                    - "mouse.dblclick": Double click at coordinates
+                    - "mouse.hover": Hover at coordinates
 
                     Return your response as a JSON object with the following structure:
 
                     {
                         "nextAction": {
-                            "type": "click" | "fill" | "press" | "type" | "check" | "uncheck" | 
-                                   "select" | "hover" | "dblclick" | "focus" | "waitForSelector" |
-                                   "waitForTimeout" | "waitForNavigation" | "getByRole" | "getByText" |
-                               "getByLabel" | "getByPlaceholder" | "getByTestId" | "keyboard.press" |
-                               "keyboard.type" | "mouse.click" | "mouse.dblclick" | "mouse.hover",
-                        "selector": "the selector (if needed)",
-                        "value": "the value (if needed)",
-                        "timeout": "optional timeout in ms"
+                            "type": "the next action to take, choose from supported action types",
+                            "selector": "EXACT selector from above",
+                            "value": "value to fill in for fill/type actions, otherwise leave as empty string",
+                            "visualConfirmation": {
+                                "expectedType": "the element type (input, button, etc.)",
+                                "expectedLocation": {
+                                    "x": number,
+                                    "y": number,
+                                    "width": number,
+                                    "height": number
+                                },
+                                "expectedVisuals": {
+                                    "backgroundColor": "expected color",
+                                    "fontSize": "expected size",
+                                    "isClickable": boolean
+                                }
+                            },
+                            "waitForOptions": {
+                                "timeout": number,
+                                "waitForState": "attached" | "visible" | "hidden",
+                                "expectsNavigation": boolean
+                            }
                         },
-                        "status": "CONTINUE" or "COMPLETE"
-                    }      
-                        
-                    Examples:
+                        "status": "CONTINUE" or "COMPLETE",
+                        "reasoning": "Explain why this element was chosen based on visual layout"
+                    }
+
+                Examples:
+                  1. Clicking a Login Button:
                     {
                         "nextAction": {
                             "type": "click",
-                            "selector": "text=Login",
-                            "value": null
+                            "selector": "button[data-testid='login-button']",
+                            "value": "",
+                            "visualConfirmation": {
+                                "expectedType": "button",
+                                "expectedLocation": {
+                                    "x": 250,
+                                    "y": 300,
+                                    "width": 100,
+                                    "height": 40
+                                },
+                                "expectedVisuals": {
+                                    "backgroundColor": "rgb(59, 130, 246)",
+                                    "fontSize": "14px",
+                                    "isClickable": true
+                                }
+                            },
+                            "waitForOptions": {
+                                "timeout": 5000,
+                                "waitForState": "visible",
+                                "expectsNavigation": true
+                            }
                         },
-                        "status": "CONTINUE"
+                        "status": "CONTINUE",
+                        "reasoning": "Clicking the blue login button in the center of the form"
                     }
-
+                2. Filling an Email Input:
                     {
                         "nextAction": {
                             "type": "fill",
                             "selector": "input[name='email']",
-                            "value": "test@example.com"
+                            "value": "test@example.com",
+                            "visualConfirmation": {
+                                "expectedType": "input",
+                                "expectedLocation": {
+                                    "x": 200,
+                                    "y": 250,
+                                    "width": 300,
+                                    "height": 40
+                                },
+                                "expectedVisuals": {
+                                    "backgroundColor": "rgb(255, 255, 255)",
+                                    "fontSize": "16px",
+                                    "isClickable": false
+                                }
+                            },
+                            "waitForOptions": {
+                                "timeout": 5000,
+                                "waitForState": "visible",
+                                "expectsNavigation": false
+                            }
                         },
-                        "status": "CONTINUE"
-                    }
+                        "status": "CONTINUE",
+                        "reasoning": "Filling the email input field at the top of the form"
+                    } 
 
+                3. Selecting from a Dropdown:
                     {
                         "nextAction": {
-                            "type": "",
-                            "selector": "",
-                            "value": ""
+                            "type": "selectOption",
+                            "selector": "select[name='country']",
+                            "value": "US",
+                            "visualConfirmation": {
+                                "expectedType": "select",
+                                "expectedLocation": {
+                                    "x": 200,
+                                    "y": 400,
+                                    "width": 200,
+                                    "height": 40
+                                },
+                                "expectedVisuals": {
+                                    "backgroundColor": "rgb(255, 255, 255)",
+                                    "fontSize": "14px",
+                                    "isClickable": true
+                                }
+                            },
+                            "waitForOptions": {
+                                "timeout": 5000,
+                                "waitForState": "visible",
+                                "expectsNavigation": false
+                            }
                         },
-                        "status": "COMPLETE"
+                        "status": "CONTINUE",
+                        "reasoning": "Selecting US from the country dropdown menu"
                     }
 
-                    Include waiting for elements/navigation when needed. 
-                    Return ONLY the command, no explanation. 
+                4. Workflow Completion:
+                    {
+                        "nextAction": {
+                            "type": "click",
+                            "selector": "button[type='submit']",
+                            "visualConfirmation": {
+                                "expectedType": "button",
+                                "expectedLocation": {
+                                    "x": 250,
+                                    "y": 500,
+                                    "width": 120,
+                                    "height": 40
+                                },
+                                "expectedVisuals": {
+                                    "backgroundColor": "rgb(34, 197, 94)",
+                                    "fontSize": "16px",
+                                    "isClickable": true
+                                }
+                            },
+                            "waitForOptions": {
+                                "timeout": 5000,
+                                "waitForState": "visible",
+                                "expectsNavigation": true
+                            }
+                        },
+                        "status": "COMPLETE",
+                        "reasoning": "Submitting the form with the green submit button at the bottom"
+                    }
                 `; 
 
                 const actionCompletion = await this.client.chat.completions.create({
@@ -470,107 +677,26 @@ export class LLMCrawler {
                     response_format: { type: 'json_object' }
                 }); 
 
-                const result = JSON.parse(actionCompletion.choices[0].message.content || '{}') as {nextAction: {type: string, selector: string, value: string, timeout: number}, status: string}; 
+                const result = JSON.parse(actionCompletion.choices[0].message.content || '{}') as ActionResponse; 
                 const status = result.status; 
 
                 if (status === 'COMPLETE') {
                     console.log(`Workflow ${workflowName} complete`); 
                     break; 
                 }
+
+                console.log("next action", result.nextAction);
                 
                 //Convert action to Playwright command 
-                const {type, selector, value, timeout} = result.nextAction; 
-                console.log(`Executing action for ${workflowName}:`, {type, selector, value}); 
-                switch (type) {
-                    // Basic actions
-                    case 'click':
-                        await page.click(selector, { timeout });
-                        break;
-                    case 'fill':
-                        await page.fill(selector, value, { timeout });
-                        break;
-                    case 'type':
-                        await page.type(selector, value, { timeout });
-                        break;
-                    case 'press':
-                        await page.press(selector, value);
-                        break;
+                const {type, selector, value, visualConfirmation, waitForOptions} = result.nextAction; 
 
-                    // Form interactions
-                    case 'check':
-                        await page.check(selector, { timeout });
-                        break;
-                    case 'uncheck':
-                        await page.uncheck(selector, { timeout });
-                        break;
-                    case 'select':
-                        await page.selectOption(selector, value, { timeout });
-                        break;
+                console.log(`Executing action for ${workflowName}:`, {type, selector, value,visualConfirmation, waitForOptions}); 
 
-                    // Mouse actions
-                    case 'hover':
-                        await page.hover(selector, { timeout });
-                        break;
-                    case 'dblclick':
-                        await page.dblclick(selector, { timeout });
-                        break;
-                    case 'focus':
-                        await page.focus(selector, { timeout });
-                        break;
-
-                    // Locator strategies
-                    case 'getByRole':
-                        await page.getByRole(selector as any).click();
-                        break;
-                    case 'getByText':
-                        await page.getByText(selector).click();
-                        break;
-                    case 'getByLabel':
-                        await page.getByLabel(selector).click();
-                        break;
-                    case 'getByPlaceholder':
-                        await page.getByPlaceholder(selector).click();
-                        break;
-                    case 'getByTestId':
-                        await page.getByTestId(selector).click();
-                        break;
-
-                    // Keyboard actions
-                    case 'keyboard.press':
-                        await page.keyboard.press(value);
-                        break;
-                    case 'keyboard.type':
-                        await page.keyboard.type(value);
-                        break;
-
-                    // Mouse actions
-                    case 'mouse.click':
-                        await page.mouse.click(parseInt(selector), parseInt(value));
-                        break;
-                    case 'mouse.dblclick':
-                        await page.mouse.dblclick(parseInt(selector), parseInt(value));
-                        break;
-                    case 'mouse.hover':
-                        await page.mouse.move(parseInt(selector), parseInt(value));
-                        break;
-                    
-                    // Waiting
-                    case 'waitForSelector':
-                        await page.waitForSelector(selector, { timeout });
-                        break;
-                    case 'waitForTimeout':
-                        await page.waitForTimeout(parseInt(value));
-                        break;
-                    case 'waitForNavigation':
-                        await page.waitForNavigation({ timeout });
-                        break;
-
-                    default:
-                        throw new Error(`Unknown action type: ${type}`);
+                const successfulAction = await this.validateAndExecuteAction(page, result.nextAction); 
+                if (!successfulAction) {
+                    console.error(`Action failed for ${workflowName}:`, result.nextAction); 
+                    break; 
                 }
-
-                //Wait for any navigation or network requests
-                await page.waitForLoadState('networkidle'); 
 
                 //Store successful action 
                 actions.push(JSON.stringify(result.nextAction)); 
@@ -594,4 +720,152 @@ export class LLMCrawler {
 
         return actions; 
     }
+
+    private async validateAndExecuteAction(page: Page, action: any) {
+        try {
+            // Try visual/coordinate-based action first
+            try {
+                const { expectedLocation, expectedType } = action.visualConfirmation;
+                const centerX = Math.floor(expectedLocation.x + expectedLocation.width / 2);
+                const centerY = Math.floor(expectedLocation.y + expectedLocation.height / 2);
+
+                // For mouse-based actions, use direct coordinates
+                if (action.type === 'click') {
+                    await page.mouse.click(centerX, centerY);
+                    return true;
+                } else if (action.type === 'fill' || action.type === 'type') {
+                    // For inputs, find element at coordinates first
+                    const element = await page.evaluateHandle((opts) => {
+                        const el = document.elementFromPoint(opts.x, opts.y);
+                        if (el?.tagName.toLowerCase() === opts.expectedType.toLowerCase()) {
+                            return el;
+                        }
+                        return null;
+                    }, { 
+                        x: centerX, 
+                        y: centerY,
+                        expectedType: expectedType 
+                    });
+
+                    if (element) {
+                        await element.evaluate((el, value) => {
+                            (el as HTMLInputElement).value = value;
+                            el?.dispatchEvent(new Event('input', { bubbles: true }));
+                            el?.dispatchEvent(new Event('change', { bubbles: true }));
+                        }, action.value);
+                        return true;
+                    }
+                }
+                throw new Error('Visual interaction failed or unsupported action type');
+            } 
+            catch (visualError) {
+                console.log('Visual interaction failed, falling back to selector', visualError);
+                
+                // Fallback to selector-based action
+                const locator = page.locator(action.selector);
+
+                // Wait for element to be ready
+                await locator.waitFor({ 
+                    state: action.waitForOptions.waitForState,
+                    timeout: action.waitForOptions.timeout 
+                });
+
+                // Start navigation wait if needed
+                const loadPromise = action.waitForOptions.expectsNavigation 
+                    ? page.waitForLoadState('networkidle', { timeout: action.waitForOptions.timeout })
+                    : null;
+    
+                // Execute the action
+                switch (action.type) {
+                    case 'click':
+                        await locator.click({
+                            timeout: action.waitForOptions.timeout,
+                            force: false
+                        });
+                        break;
+                    case 'fill':
+                    case 'type':  // type is handled as fill
+                        await locator.fill(action.value || '', {
+                            timeout: action.waitForOptions.timeout
+                        });
+                        break;
+                    case 'press':
+                        await locator.press(action.value, {
+                            timeout: action.waitForOptions.timeout
+                        });
+                        break;
+                    case 'check':
+                        await locator.check({
+                            timeout: action.waitForOptions.timeout
+                        });
+                        break;
+                    case 'uncheck':
+                        await locator.uncheck({
+                            timeout: action.waitForOptions.timeout
+                        });
+                        break;
+                    case 'selectOption':
+                        await locator.selectOption(action.value, {
+                            timeout: action.waitForOptions.timeout
+                        });
+                        break;
+                    case 'hover':
+                        await locator.hover({
+                            timeout: action.waitForOptions.timeout,
+                            force: false
+                        });
+                        break;
+                    case 'dblclick':
+                        await locator.dblclick({
+                            timeout: action.waitForOptions.timeout,
+                            force: false
+                        });
+                        break;
+                    case 'focus':
+                        await locator.focus({
+                            timeout: action.waitForOptions.timeout
+                        });
+                        break;
+                    case 'keyboard.press':
+                        await page.keyboard.press(action.value);
+                        break;
+                    case 'keyboard.type':
+                        await page.keyboard.type(action.value);
+                        break;
+                    case 'mouse.click':
+                        await page.mouse.click(
+                            action.visualConfirmation.expectedLocation.x,
+                            action.visualConfirmation.expectedLocation.y
+                        );
+                        break;
+                    case 'mouse.dblclick':
+                        await page.mouse.dblclick(
+                            action.visualConfirmation.expectedLocation.x,
+                            action.visualConfirmation.expectedLocation.y
+                        );
+                        break;
+                    case 'mouse.hover':
+                        await page.mouse.move(
+                            action.visualConfirmation.expectedLocation.x,
+                            action.visualConfirmation.expectedLocation.y
+                        );
+                        break;
+                    default:
+                        throw new Error(`Unsupported action type: ${action.type}`);
+                }
+    
+                // Wait for navigation if needed
+                if (loadPromise) {
+                    await loadPromise;
+                }
+            }
+    
+            return true;
+        } 
+        catch (error) {
+            console.error('Both visual and selector-based interactions failed:', error);
+            throw error; // Re-throw to handle at higher level
+        }
+    }
 }
+

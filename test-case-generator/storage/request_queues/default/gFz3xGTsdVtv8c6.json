@@ -1,0 +1,9 @@
+{
+	"id": "gFz3xGTsdVtv8c6",
+	"json": "{\"id\":\"gFz3xGTsdVtv8c6\",\"url\":\"https://hubeali.com/category/tests/\",\"uniqueKey\":\"https://hubeali.com/category/tests\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741042618076,
+	"retryCount": 0,
+	"uniqueKey": "https://hubeali.com/category/tests",
+	"url": "https://hubeali.com/category/tests/"
+}
