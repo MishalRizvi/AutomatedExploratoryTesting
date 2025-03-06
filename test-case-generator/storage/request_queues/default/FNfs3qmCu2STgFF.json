@@ -1,0 +1,9 @@
+{
+	"id": "FNfs3qmCu2STgFF",
+	"json": "{\"id\":\"FNfs3qmCu2STgFF\",\"url\":\"https://talent.tern-group.com/?utm_source=candidate_page_website\",\"uniqueKey\":\"https://talent.tern-group.com\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252603291,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com",
+	"url": "https://talent.tern-group.com/?utm_source=candidate_page_website"
+}

@@ -1,0 +1,9 @@
+{
+	"id": "3YWJRBcJp6ZFHtr",
+	"json": "{\"id\":\"3YWJRBcJp6ZFHtr\",\"url\":\"https://talent.tern-group.com/en/locations/8JLi-5/Berlin\",\"uniqueKey\":\"https://talent.tern-group.com/en/locations/8JLi-5/Berlin\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252657799,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/en/locations/8JLi-5/Berlin",
+	"url": "https://talent.tern-group.com/en/locations/8JLi-5/Berlin"
+}

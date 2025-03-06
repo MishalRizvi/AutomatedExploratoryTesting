@@ -1,9 +1,0 @@
-{
-	"id": "plgmRpxSyNIZJb7",
-	"json": "{\"id\":\"plgmRpxSyNIZJb7\",\"url\":\"http://hubeali.com/articles/FalsificationAndTheTruth.pdf\",\"uniqueKey\":\"http://hubeali.com/articles/FalsificationAndTheTruth.pdf\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042741027,
-	"retryCount": 0,
-	"uniqueKey": "http://hubeali.com/articles/FalsificationAndTheTruth.pdf",
-	"url": "http://hubeali.com/articles/FalsificationAndTheTruth.pdf"
-}

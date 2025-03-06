@@ -1,9 +1,0 @@
-{
-	"id": "e6fVgvdEPOPmobb",
-	"json": "{\"id\":\"e6fVgvdEPOPmobb\",\"url\":\"https://hubeali.com/article/family-problems-and-guidance-from-islam/\",\"loadedUrl\":\"https://hubeali.com/article/family-problems-and-guidance-from-islam/\",\"uniqueKey\":\"https://hubeali.com/article/family-problems-and-guidance-from-islam\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":1,\"errorMessages\":[\"Error: requestHandler timed out after 60 seconds.\\n    at Timeout._onTimeout (/Users/mishalrizvi/Projects/AutomatedExploratoryTesting/test-case-generator/node_modules/@apify/timeout/cjs/index.cjs:64:68)\\n    at listOnTimeout (node:internal/timers:594:17)\\n    at process.processTimers (node:internal/timers:529:7)\"],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-03T23:00:20.497Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 1,
-	"uniqueKey": "https://hubeali.com/article/family-problems-and-guidance-from-islam",
-	"url": "https://hubeali.com/article/family-problems-and-guidance-from-islam/"
-}

@@ -1,9 +1,0 @@
-{
-	"id": "o1aGFt0j2fWvpeu",
-	"json": "{\"id\":\"o1aGFt0j2fWvpeu\",\"url\":\"https://hubeali.com/online-books/\",\"loadedUrl\":\"https://hubeali.com/online-books/\",\"uniqueKey\":\"https://hubeali.com/online-books\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-03T22:56:58.080Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/online-books",
-	"url": "https://hubeali.com/online-books/"
-}

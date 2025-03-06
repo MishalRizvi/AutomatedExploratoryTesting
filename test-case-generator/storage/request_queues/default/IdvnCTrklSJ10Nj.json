@@ -1,0 +1,9 @@
+{
+	"id": "IdvnCTrklSJ10Nj",
+	"json": "{\"id\":\"IdvnCTrklSJ10Nj\",\"url\":\"https://talent.tern-group.com/en/locations/DiiC-5/Holzminden,%20Lower%20Saxony\",\"uniqueKey\":\"https://talent.tern-group.com/en/locations/DiiC-5/Holzminden,%20Lower%20Saxony\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252673661,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/en/locations/DiiC-5/Holzminden,%20Lower%20Saxony",
+	"url": "https://talent.tern-group.com/en/locations/DiiC-5/Holzminden,%20Lower%20Saxony"
+}

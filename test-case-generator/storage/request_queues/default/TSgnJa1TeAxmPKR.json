@@ -1,9 +1,0 @@
-{
-	"id": "TSgnJa1TeAxmPKR",
-	"json": "{\"id\":\"TSgnJa1TeAxmPKR\",\"url\":\"https://hubeali.com/contact/\",\"uniqueKey\":\"https://hubeali.com/contact\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042789304,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/contact",
-	"url": "https://hubeali.com/contact/"
-}

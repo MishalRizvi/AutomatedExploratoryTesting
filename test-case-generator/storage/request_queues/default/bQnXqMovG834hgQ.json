@@ -1,9 +1,0 @@
-{
-	"id": "bQnXqMovG834hgQ",
-	"json": "{\"id\":\"bQnXqMovG834hgQ\",\"url\":\"https://hubeali.com/featured-articles/\",\"loadedUrl\":\"https://hubeali.com/featured-articles/\",\"uniqueKey\":\"https://hubeali.com/featured-articles\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-03T22:58:10.219Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/featured-articles",
-	"url": "https://hubeali.com/featured-articles/"
-}

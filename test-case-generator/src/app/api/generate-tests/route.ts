@@ -13,56 +13,44 @@ interface WebsiteRequest {
 
 export async function POST(request: Request) {
     try {
-        const data: WebsiteRequest = await request.json();
-
-        //Validate input 
-        if (!data.url) {
-            return NextResponse.json({
-                status: 400, 
-                error: "URL is required"
-            });
-        }
-
-        //Initialise crawler and explore website 
+        const data = await request.json();
+        console.log("Starting test generation for URL:", data.url);
 
         const phase1 = new Phase1(
-            process.env.OPENAI_API_KEY || "",
-            data.websiteContext || "",
+            process.env.OPENAI_API_KEY || '',
+            data.websiteContext || '',
             {
                 username: data.username,
                 password: data.password,
                 requiresAuth: data.requiresAuth
             }
         );
-        await phase1.crawl(data.url); 
-        console.log("Phase 1 completed");
-        console.log("Printing results - msg from route"); 
-        phase1.printResults(); 
 
-        return NextResponse.json({
-            status: "success",
-            data: {
-                url: data.url,
-                summary: {
-                    totalWorkflows: phase1.links.length,
-                    workflowNames: phase1.links.map(w => w.url),
-                },
-                workflows: phase1.links.map((linkComponent: any) => ({
-                    name: linkComponent.name,
-                    description: linkComponent.description,
-                    startUrl: linkComponent.startUrl,
-                    actions: linkComponent.actions,
-                    inputs: linkComponent.inputs  // Add inputs to the response if Phase1 provides them
-                }))
-            }
+        await phase1.crawl(data.url);
+        console.log("Phase 1 completed");
+
+        // Wait for results to be ready
+        const results = await phase1.getResults(); // New method to get results
+
+        // Log results to server console
+        console.log("Test Generation Results:", JSON.stringify(results, null, 2));
+
+        return new Response(JSON.stringify({ 
+            success: true, 
+            results: results 
+        }), {
+            headers: { 'Content-Type': 'application/json' },
         });
-    }
-    catch (error: any) {
-        console.error("Error generating tests:", error); 
-        return NextResponse.json({
-            status: 500, 
-            error: error.message
-        })
+
+    } catch (error) {
+        console.error("Error in test generation:", error);
+        return new Response(JSON.stringify({ 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 }
 

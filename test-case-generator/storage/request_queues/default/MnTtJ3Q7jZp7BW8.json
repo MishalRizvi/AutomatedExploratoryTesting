@@ -1,0 +1,9 @@
+{
+	"id": "MnTtJ3Q7jZp7BW8",
+	"json": "{\"id\":\"MnTtJ3Q7jZp7BW8\",\"url\":\"https://www.tern-group.com/de/about-us\",\"uniqueKey\":\"https://www.tern-group.com/de/about-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252671682,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/about-us",
+	"url": "https://www.tern-group.com/de/about-us"
+}

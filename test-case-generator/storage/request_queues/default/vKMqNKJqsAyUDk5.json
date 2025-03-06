@@ -1,9 +1,0 @@
-{
-	"id": "vKMqNKJqsAyUDk5",
-	"json": "{\"id\":\"vKMqNKJqsAyUDk5\",\"url\":\"https://hubeali.com/membership/\",\"uniqueKey\":\"https://hubeali.com/membership\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042789355,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/membership",
-	"url": "https://hubeali.com/membership/"
-}

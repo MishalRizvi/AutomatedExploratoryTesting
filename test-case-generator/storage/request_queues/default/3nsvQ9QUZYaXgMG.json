@@ -1,0 +1,9 @@
+{
+	"id": "3nsvQ9QUZYaXgMG",
+	"json": "{\"id\":\"3nsvQ9QUZYaXgMG\",\"url\":\"https://www.tern-group.com/de/uk-international-carers\",\"uniqueKey\":\"https://www.tern-group.com/de/uk-international-carers\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252622969,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/uk-international-carers",
+	"url": "https://www.tern-group.com/de/uk-international-carers"
+}

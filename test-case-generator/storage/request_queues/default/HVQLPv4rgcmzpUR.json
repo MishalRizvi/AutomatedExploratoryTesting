@@ -1,0 +1,9 @@
+{
+	"id": "HVQLPv4rgcmzpUR",
+	"json": "{\"id\":\"HVQLPv4rgcmzpUR\",\"url\":\"https://recruit.tern-group.com/en\",\"loadedUrl\":\"https://recruit.tern-group.com/en\",\"uniqueKey\":\"https://recruit.tern-group.com/en\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2025-03-06T09:14:43.653Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://recruit.tern-group.com/en",
+	"url": "https://recruit.tern-group.com/en"
+}

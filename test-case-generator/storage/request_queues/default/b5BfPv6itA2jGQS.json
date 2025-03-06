@@ -1,9 +1,0 @@
-{
-	"id": "b5BfPv6itA2jGQS",
-	"json": "{\"id\":\"b5BfPv6itA2jGQS\",\"url\":\"http://hubeali.com/books/Urdu-Books/GoharParaiy.pdf\",\"uniqueKey\":\"http://hubeali.com/books/Urdu-Books/GoharParaiy.pdf\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042761327,
-	"retryCount": 0,
-	"uniqueKey": "http://hubeali.com/books/Urdu-Books/GoharParaiy.pdf",
-	"url": "http://hubeali.com/books/Urdu-Books/GoharParaiy.pdf"
-}

@@ -1,0 +1,9 @@
+{
+	"id": "rFGUKLSzdUYYYGh",
+	"json": "{\"id\":\"rFGUKLSzdUYYYGh\",\"url\":\"https://talent.tern-group.com/jobs/vprv-5\",\"loadedUrl\":\"https://talent.tern-group.com/en/jobs/vprv-5\",\"uniqueKey\":\"https://talent.tern-group.com/jobs/vprv-5\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:17:08.258Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/jobs/vprv-5",
+	"url": "https://talent.tern-group.com/jobs/vprv-5"
+}

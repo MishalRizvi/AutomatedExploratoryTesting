@@ -17,6 +17,7 @@ export class Phase1 {
     public links: Array<LinkComponent>; 
     private requiresAuth: boolean; 
     private auth: { username?: string, password?: string }; 
+    private visitedUrls: Array<string>; 
 
     constructor(apiKey: string, websiteContext: string, auth: { username?: string, password?: string, requiresAuth: boolean }) {
         this.client = new OpenAI({ apiKey: apiKey }); 
@@ -24,7 +25,7 @@ export class Phase1 {
         this.links = []; 
         this.requiresAuth = auth.requiresAuth; 
         this.auth = { username: auth.username, password: auth.password }; 
-
+        this.visitedUrls = []; 
         console.log("Login required:", this.requiresAuth);
         console.log("Auth:", { username: this.auth.username, password: this.auth.password });    }
 
@@ -100,6 +101,14 @@ export class Phase1 {
                         
                         const currentUrl = request.url;
                         log.info(`Processing: ${currentUrl}`);
+
+                        if (self.visitedUrls.includes(currentUrl)) {
+                            console.log("URL already visited, skipping");
+                            return;
+                        }
+                        else {
+                            self.visitedUrls.push(currentUrl);
+                        }
     
                         const { links, buttons, inputs, forms } = await self.processDOM(page);
     
@@ -149,6 +158,15 @@ export class Phase1 {
                 async requestHandler({ request, page, enqueueLinks, log }) {
                     const currentUrl = request.url;
                     log.info(`Processing: ${currentUrl}`);
+
+                    if (self.visitedUrls.includes(currentUrl)) {
+                        console.log("URL already visited, skipping");
+                        return;
+                    }
+                    else {
+                        self.visitedUrls.push(currentUrl);
+                    }
+
     
                     const { links, buttons, inputs, forms } = await self.processDOM(page);
     
@@ -993,27 +1011,29 @@ export class Phase1 {
 
     
 
-    public async printResults() {
-        console.log("Printing Results");
-        console.log(this.links);
-        for (const linkComponent of this.links) {
-            console.log("\n=== URL:", linkComponent.url, "===");
-            
-            // Print Interactive Elements
-            console.log("\n--- Interactive Elements ---");
-            Object.entries(linkComponent.interactiveElements).forEach(([key, elements]) => {
-                console.log(`\n${key.toUpperCase()}:`);
-                console.log(JSON.stringify(elements, null, 2));
-            });
-    
-            // Print Test Cases
-            console.log("\n--- Test Cases ---");
-            if (linkComponent.testCases && typeof linkComponent.testCases === 'object') {
-                console.log(JSON.stringify(linkComponent.testCases, null, 2));
-            } 
-            else {
-                console.log("No test cases generated");
-            }
-        }
+    public async getResults() {
+        const results = {
+            totalPages: this.links.length,
+            pages: this.links.map(linkComponent => ({
+                url: linkComponent.url,
+                elementCounts: {
+                    buttons: linkComponent.interactiveElements.buttons?.length || 0,
+                    forms: linkComponent.interactiveElements.forms?.length || 0,
+                    inputs: linkComponent.interactiveElements.inputs?.length || 0,
+                    links: linkComponent.interactiveElements.links?.length || 0
+                },
+                testCases: linkComponent.testCases
+            }))
+        };
+
+        // Log results to server console
+        console.log("Generated Results:", JSON.stringify(results, null, 2));
+        
+        return results;
+    }
+
+    public printResults() {
+        const results = this.getResults();
+        console.log("Full Test Generation Results:", JSON.stringify(results, null, 2));
     }
 }

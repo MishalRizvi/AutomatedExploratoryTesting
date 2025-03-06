@@ -1,0 +1,9 @@
+{
+	"id": "8UzuKvBqZPE8dQI",
+	"json": "{\"id\":\"8UzuKvBqZPE8dQI\",\"url\":\"https://recruit.tern-group.com/en/forgot-password\",\"loadedUrl\":\"https://recruit.tern-group.com/en/forgot-password\",\"uniqueKey\":\"https://recruit.tern-group.com/en/forgot-password\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:15:11.953Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://recruit.tern-group.com/en/forgot-password",
+	"url": "https://recruit.tern-group.com/en/forgot-password"
+}

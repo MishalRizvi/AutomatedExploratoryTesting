@@ -1,9 +1,0 @@
-{
-	"id": "AacKo38UUKw6VnH",
-	"json": "{\"id\":\"AacKo38UUKw6VnH\",\"url\":\"https://hubeali.com/books/al-mahaasin/\",\"uniqueKey\":\"https://hubeali.com/books/al-mahaasin\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042941137,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/books/al-mahaasin",
-	"url": "https://hubeali.com/books/al-mahaasin/"
-}

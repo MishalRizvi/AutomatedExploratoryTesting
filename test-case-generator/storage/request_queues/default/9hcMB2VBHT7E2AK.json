@@ -1,0 +1,9 @@
+{
+	"id": "9hcMB2VBHT7E2AK",
+	"json": "{\"id\":\"9hcMB2VBHT7E2AK\",\"url\":\"https://talent.tern-group.com/jobs/nZKA-5\",\"loadedUrl\":\"https://talent.tern-group.com/en/jobs/nZKA-5\",\"uniqueKey\":\"https://talent.tern-group.com/jobs/nZKA-5\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:18:01.204Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/jobs/nZKA-5",
+	"url": "https://talent.tern-group.com/jobs/nZKA-5"
+}

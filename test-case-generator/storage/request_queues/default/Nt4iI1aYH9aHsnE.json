@@ -1,9 +1,0 @@
-{
-	"id": "Nt4iI1aYH9aHsnE",
-	"json": "{\"id\":\"Nt4iI1aYH9aHsnE\",\"url\":\"https://hubeali.com/books/illal-al-sharaie-vol-12/\",\"loadedUrl\":\"https://hubeali.com/books/illal-al-sharaie-vol-12/\",\"uniqueKey\":\"https://hubeali.com/books/illal-al-sharaie-vol-12\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":1,\"errorMessages\":[\"Error: 400 This model's maximum context length is 128000 tokens. However, your messages resulted in 291989 tokens. Please reduce the length of the messages.\\n    at APIError.generate (webpack-internal:///(rsc)/./node_modules/openai/error.mjs:60:20)\\n    at OpenAI.makeStatusError (webpack-internal:///(rsc)/./node_modules/openai/core.mjs:329:65)\\n    at OpenAI.makeRequest (webpack-internal:///(rsc)/./node_modules/openai/core.mjs:373:30)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\\n    at async Phase1.generateTestCases (webpack-internal:///(rsc)/./src/services/phase-1.ts:473:28)\\n    at async PlaywrightCrawler.requestHandler [as userProvidedRequestHandler] (webpack-internal:///(rsc)/./src/services/phase-1.ts:148:47)\\n    at async wrap (/Users/mishalrizvi/Projects/AutomatedExploratoryTesting/test-case-generator/node_modules/@apify/timeout/cjs/index.cjs:54:21)\"],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":5}}}",
-	"method": "GET",
-	"orderNo": 1741042772351,
-	"retryCount": 1,
-	"uniqueKey": "https://hubeali.com/books/illal-al-sharaie-vol-12",
-	"url": "https://hubeali.com/books/illal-al-sharaie-vol-12/"
-}

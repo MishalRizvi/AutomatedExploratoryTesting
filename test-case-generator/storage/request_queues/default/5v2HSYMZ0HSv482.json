@@ -1,9 +1,0 @@
-{
-	"id": "5v2HSYMZ0HSv482",
-	"json": "{\"id\":\"5v2HSYMZ0HSv482\",\"url\":\"https://hubeali.com/article/shoes-and-socks/\",\"uniqueKey\":\"https://hubeali.com/article/shoes-and-socks\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042789382,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/article/shoes-and-socks",
-	"url": "https://hubeali.com/article/shoes-and-socks/"
-}

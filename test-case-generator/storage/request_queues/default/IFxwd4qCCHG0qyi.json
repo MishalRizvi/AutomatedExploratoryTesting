@@ -1,0 +1,9 @@
+{
+	"id": "IFxwd4qCCHG0qyi",
+	"json": "{\"id\":\"IFxwd4qCCHG0qyi\",\"url\":\"https://talent.tern-group.com/login\",\"loadedUrl\":\"https://talent.tern-group.com/en/login\",\"uniqueKey\":\"https://talent.tern-group.com/login\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:15:09.884Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/login",
+	"url": "https://talent.tern-group.com/login"
+}

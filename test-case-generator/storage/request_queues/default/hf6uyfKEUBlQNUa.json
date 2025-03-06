@@ -1,0 +1,9 @@
+{
+	"id": "hf6uyfKEUBlQNUa",
+	"json": "{\"id\":\"hf6uyfKEUBlQNUa\",\"url\":\"https://talent.tern-group.com/en/locations/C6cG-5/Fulda\",\"uniqueKey\":\"https://talent.tern-group.com/en/locations/C6cG-5/Fulda\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252667755,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/en/locations/C6cG-5/Fulda",
+	"url": "https://talent.tern-group.com/en/locations/C6cG-5/Fulda"
+}

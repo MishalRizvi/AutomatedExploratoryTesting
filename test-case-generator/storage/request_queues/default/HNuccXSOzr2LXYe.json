@@ -1,0 +1,9 @@
+{
+	"id": "HNuccXSOzr2LXYe",
+	"json": "{\"id\":\"HNuccXSOzr2LXYe\",\"url\":\"https://talent.tern-group.com/en/locations/dF4m-5/Torquay\",\"uniqueKey\":\"https://talent.tern-group.com/en/locations/dF4m-5/Torquay\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252634728,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/en/locations/dF4m-5/Torquay",
+	"url": "https://talent.tern-group.com/en/locations/dF4m-5/Torquay"
+}

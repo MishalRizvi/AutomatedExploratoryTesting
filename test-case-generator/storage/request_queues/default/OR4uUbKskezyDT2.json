@@ -1,0 +1,9 @@
+{
+	"id": "OR4uUbKskezyDT2",
+	"json": "{\"id\":\"OR4uUbKskezyDT2\",\"url\":\"https://talent.tern-group.com/jobs/MspA-5\",\"loadedUrl\":\"https://talent.tern-group.com/en/jobs/MspA-5\",\"uniqueKey\":\"https://talent.tern-group.com/jobs/MspA-5\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:17:24.293Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://talent.tern-group.com/jobs/MspA-5",
+	"url": "https://talent.tern-group.com/jobs/MspA-5"
+}

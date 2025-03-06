@@ -1,0 +1,9 @@
+{
+	"id": "EWiimlAUdhhruhe",
+	"json": "{\"id\":\"EWiimlAUdhhruhe\",\"url\":\"https://go.tern-group.com/referral\",\"loadedUrl\":\"https://form.typeform.com/to/tdtRSLNr\",\"uniqueKey\":\"https://go.tern-group.com/referral\",\"method\":\"GET\",\"noRetry\":true,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":7}},\"handledAt\":\"2025-03-06T09:15:45.504Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://go.tern-group.com/referral",
+	"url": "https://go.tern-group.com/referral"
+}

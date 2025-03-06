@@ -1,9 +1,0 @@
-{
-	"id": "bUPN5ZTaEUHDjNn",
-	"json": "{\"id\":\"bUPN5ZTaEUHDjNn\",\"url\":\"https://hubeali.com/category/politics/\",\"uniqueKey\":\"https://hubeali.com/category/politics\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741042618066,
-	"retryCount": 0,
-	"uniqueKey": "https://hubeali.com/category/politics",
-	"url": "https://hubeali.com/category/politics/"
-}

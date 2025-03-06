@@ -1,0 +1,9 @@
+{
+	"id": "gwBgYjdD6AjUBvA",
+	"json": "{\"id\":\"gwBgYjdD6AjUBvA\",\"url\":\"https://www.tern-group.com/de/contact-us\",\"uniqueKey\":\"https://www.tern-group.com/de/contact-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741252637324,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/contact-us",
+	"url": "https://www.tern-group.com/de/contact-us"
+}

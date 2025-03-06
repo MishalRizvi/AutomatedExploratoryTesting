@@ -1,0 +1,9 @@
+{
+	"id": "Xd0sUa8LOdV1Mbq",
+	"json": "{\"id\":\"Xd0sUa8LOdV1Mbq\",\"url\":\"https://www.tern-group.com/privacy-policy\",\"loadedUrl\":\"https://www.tern-group.com/privacy-policy\",\"uniqueKey\":\"https://www.tern-group.com/privacy-policy\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:17:52.909Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/privacy-policy",
+	"url": "https://www.tern-group.com/privacy-policy"
+}
