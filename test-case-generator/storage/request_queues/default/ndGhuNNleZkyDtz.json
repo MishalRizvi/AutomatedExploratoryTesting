@@ -1,0 +1,9 @@
+{
+	"id": "ndGhuNNleZkyDtz",
+	"json": "{\"id\":\"ndGhuNNleZkyDtz\",\"url\":\"https://www.tern-group.com/datenschutzerklarung\",\"uniqueKey\":\"https://www.tern-group.com/datenschutzerklarung\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741266376678,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/datenschutzerklarung",
+	"url": "https://www.tern-group.com/datenschutzerklarung"
+}

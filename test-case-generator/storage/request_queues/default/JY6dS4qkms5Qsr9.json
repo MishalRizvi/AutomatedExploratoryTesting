@@ -1,6 +1,6 @@
 {
 	"id": "JY6dS4qkms5Qsr9",
-	"json": "{\"id\":\"JY6dS4qkms5Qsr9\",\"url\":\"https://www.tern-group.com/uk-doctors\",\"loadedUrl\":\"https://www.tern-group.com/uk-doctors\",\"uniqueKey\":\"https://www.tern-group.com/uk-doctors\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:16:45.313Z\"}",
+	"json": "{\"id\":\"JY6dS4qkms5Qsr9\",\"url\":\"https://www.tern-group.com/uk-doctors\",\"loadedUrl\":\"https://www.tern-group.com/uk-doctors\",\"uniqueKey\":\"https://www.tern-group.com/uk-doctors\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:05:32.803Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,

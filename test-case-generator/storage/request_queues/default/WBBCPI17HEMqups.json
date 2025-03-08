@@ -1,0 +1,9 @@
+{
+	"id": "WBBCPI17HEMqups",
+	"json": "{\"id\":\"WBBCPI17HEMqups\",\"url\":\"https://www.tern-group.com/de/blog\",\"uniqueKey\":\"https://www.tern-group.com/de/blog\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741266368332,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/de/blog",
+	"url": "https://www.tern-group.com/de/blog"
+}

@@ -1,8 +1,8 @@
 {
 	"id": "gwBgYjdD6AjUBvA",
-	"json": "{\"id\":\"gwBgYjdD6AjUBvA\",\"url\":\"https://www.tern-group.com/de/contact-us\",\"uniqueKey\":\"https://www.tern-group.com/de/contact-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"json": "{\"id\":\"gwBgYjdD6AjUBvA\",\"url\":\"https://www.tern-group.com/de/contact-us\",\"loadedUrl\":\"https://www.tern-group.com/de/contact-us\",\"uniqueKey\":\"https://www.tern-group.com/de/contact-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:06:57.407Z\"}",
 	"method": "GET",
-	"orderNo": 1741252637324,
+	"orderNo": null,
 	"retryCount": 0,
 	"uniqueKey": "https://www.tern-group.com/de/contact-us",
 	"url": "https://www.tern-group.com/de/contact-us"

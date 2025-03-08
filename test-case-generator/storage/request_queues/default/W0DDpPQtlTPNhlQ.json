@@ -1,6 +1,6 @@
 {
 	"id": "W0DDpPQtlTPNhlQ",
-	"json": "{\"id\":\"W0DDpPQtlTPNhlQ\",\"url\":\"https://talent.tern-group.com/en/all-jobs\",\"loadedUrl\":\"https://talent.tern-group.com/en/all-jobs\",\"uniqueKey\":\"https://talent.tern-group.com/en/all-jobs\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:15:46.083Z\"}",
+	"json": "{\"id\":\"W0DDpPQtlTPNhlQ\",\"url\":\"https://talent.tern-group.com/en/all-jobs\",\"loadedUrl\":\"https://talent.tern-group.com/en/all-jobs\",\"uniqueKey\":\"https://talent.tern-group.com/en/all-jobs\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:05:12.037Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,

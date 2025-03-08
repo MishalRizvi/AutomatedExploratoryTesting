@@ -21,7 +21,8 @@
     "playwright": "^1.50.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "shadcn-ui": "^0.9.4"
+    "shadcn-ui": "^0.9.4",
+    "typescript-graph": "^0.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -1,8 +1,8 @@
 {
 	"id": "QrTSwpdTxBfIPWr",
-	"json": "{\"id\":\"QrTSwpdTxBfIPWr\",\"url\":\"https://tern-group.com/login\",\"uniqueKey\":\"https://tern-group.com/login\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"json": "{\"id\":\"QrTSwpdTxBfIPWr\",\"url\":\"https://tern-group.com/login\",\"loadedUrl\":\"https://www.tern-group.com/login\",\"uniqueKey\":\"https://tern-group.com/login\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:05:12.636Z\"}",
 	"method": "GET",
-	"orderNo": 1741252603291,
+	"orderNo": null,
 	"retryCount": 0,
 	"uniqueKey": "https://tern-group.com/login",
 	"url": "https://tern-group.com/login"

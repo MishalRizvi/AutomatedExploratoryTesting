@@ -1,9 +1,0 @@
-{
-	"id": "aFb8uazHrGXG0qQ",
-	"json": "{\"id\":\"aFb8uazHrGXG0qQ\",\"url\":\"https://talent.tern-group.com/en/locations/IdWu-5/Barnstable\",\"uniqueKey\":\"https://talent.tern-group.com/en/locations/IdWu-5/Barnstable\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
-	"method": "GET",
-	"orderNo": 1741252678074,
-	"retryCount": 0,
-	"uniqueKey": "https://talent.tern-group.com/en/locations/IdWu-5/Barnstable",
-	"url": "https://talent.tern-group.com/en/locations/IdWu-5/Barnstable"
-}

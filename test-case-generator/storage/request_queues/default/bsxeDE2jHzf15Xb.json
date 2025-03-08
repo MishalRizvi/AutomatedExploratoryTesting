@@ -1,6 +1,6 @@
 {
 	"id": "bsxeDE2jHzf15Xb",
-	"json": "{\"id\":\"bsxeDE2jHzf15Xb\",\"url\":\"https://talent.tern-group.com/prepare/interview/common\",\"loadedUrl\":\"https://talent.tern-group.com/en/prepare/interview/common\",\"uniqueKey\":\"https://talent.tern-group.com/prepare/interview/common\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:15:27.889Z\"}",
+	"json": "{\"id\":\"bsxeDE2jHzf15Xb\",\"url\":\"https://talent.tern-group.com/prepare/interview/common\",\"loadedUrl\":\"https://talent.tern-group.com/en/prepare/interview/common\",\"uniqueKey\":\"https://talent.tern-group.com/prepare/interview/common\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:04:16.929Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,

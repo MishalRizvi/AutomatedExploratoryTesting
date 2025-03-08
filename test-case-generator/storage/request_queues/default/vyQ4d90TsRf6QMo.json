@@ -1,6 +1,6 @@
 {
 	"id": "vyQ4d90TsRf6QMo",
-	"json": "{\"id\":\"vyQ4d90TsRf6QMo\",\"url\":\"https://www.tern-group.com/german-nurses\",\"loadedUrl\":\"https://www.tern-group.com/german-nurses\",\"uniqueKey\":\"https://www.tern-group.com/german-nurses\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:16:18.997Z\"}",
+	"json": "{\"id\":\"vyQ4d90TsRf6QMo\",\"url\":\"https://www.tern-group.com/german-nurses\",\"loadedUrl\":\"https://www.tern-group.com/german-nurses\",\"uniqueKey\":\"https://www.tern-group.com/german-nurses\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:05:17.866Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,

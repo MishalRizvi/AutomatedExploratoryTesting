@@ -1,6 +1,6 @@
 {
 	"id": "LVilDvpXcesgN3S",
-	"json": "{\"id\":\"LVilDvpXcesgN3S\",\"url\":\"https://recruit.tern-group.com/en/login\",\"loadedUrl\":\"https://recruit.tern-group.com/en/login\",\"uniqueKey\":\"https://recruit.tern-group.com/en/login\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:15:38.876Z\"}",
+	"json": "{\"id\":\"LVilDvpXcesgN3S\",\"url\":\"https://recruit.tern-group.com/en/login\",\"loadedUrl\":\"https://recruit.tern-group.com/en/login\",\"uniqueKey\":\"https://recruit.tern-group.com/en/login\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:04:16.326Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,

@@ -1,0 +1,9 @@
+{
+	"id": "MxFdu8BoWs2pILo",
+	"json": "{\"id\":\"MxFdu8BoWs2pILo\",\"url\":\"https://www.tern-group.com/blogs\",\"uniqueKey\":\"https://www.tern-group.com/blogs\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741266376668,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/blogs",
+	"url": "https://www.tern-group.com/blogs"
+}

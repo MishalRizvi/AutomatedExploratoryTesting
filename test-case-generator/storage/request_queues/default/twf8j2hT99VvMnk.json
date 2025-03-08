@@ -1,6 +1,6 @@
 {
 	"id": "twf8j2hT99VvMnk",
-	"json": "{\"id\":\"twf8j2hT99VvMnk\",\"url\":\"https://www.tern-group.com/uk-international-carers\",\"loadedUrl\":\"https://www.tern-group.com/uk-international-carers\",\"uniqueKey\":\"https://www.tern-group.com/uk-international-carers\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:17:02.970Z\"}",
+	"json": "{\"id\":\"twf8j2hT99VvMnk\",\"url\":\"https://www.tern-group.com/uk-international-carers\",\"loadedUrl\":\"https://www.tern-group.com/uk-international-carers\",\"uniqueKey\":\"https://www.tern-group.com/uk-international-carers\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:05:22.800Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,

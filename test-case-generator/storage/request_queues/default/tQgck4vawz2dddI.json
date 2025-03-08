@@ -1,0 +1,9 @@
+{
+	"id": "tQgck4vawz2dddI",
+	"json": "{\"id\":\"tQgck4vawz2dddI\",\"url\":\"https://www.tern-group.com/home\",\"uniqueKey\":\"https://www.tern-group.com/home\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741266376667,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/home",
+	"url": "https://www.tern-group.com/home"
+}

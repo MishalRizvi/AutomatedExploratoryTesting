@@ -1,0 +1,9 @@
+{
+	"id": "ovOgVmnEPZr7fQv",
+	"json": "{\"id\":\"ovOgVmnEPZr7fQv\",\"url\":\"https://www.tern-group.com/blog?a90963e4_page=2\",\"uniqueKey\":\"https://www.tern-group.com/blog?a90963e4_page=2\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741266376666,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/blog?a90963e4_page=2",
+	"url": "https://www.tern-group.com/blog?a90963e4_page=2"
+}

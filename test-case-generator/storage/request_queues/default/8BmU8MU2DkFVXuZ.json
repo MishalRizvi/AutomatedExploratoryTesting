@@ -1,0 +1,9 @@
+{
+	"id": "8BmU8MU2DkFVXuZ",
+	"json": "{\"id\":\"8BmU8MU2DkFVXuZ\",\"url\":\"https://www.tern-group.com/blog/ausbildung-de\",\"uniqueKey\":\"https://www.tern-group.com/blog/ausbildung-de\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\"}}}",
+	"method": "GET",
+	"orderNo": 1741266376662,
+	"retryCount": 0,
+	"uniqueKey": "https://www.tern-group.com/blog/ausbildung-de",
+	"url": "https://www.tern-group.com/blog/ausbildung-de"
+}

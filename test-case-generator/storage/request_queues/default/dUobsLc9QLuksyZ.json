@@ -1,6 +1,6 @@
 {
 	"id": "dUobsLc9QLuksyZ",
-	"json": "{\"id\":\"dUobsLc9QLuksyZ\",\"url\":\"https://www.tern-group.com/about-us\",\"loadedUrl\":\"https://www.tern-group.com/about-us\",\"uniqueKey\":\"https://www.tern-group.com/about-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T09:17:51.684Z\"}",
+	"json": "{\"id\":\"dUobsLc9QLuksyZ\",\"url\":\"https://www.tern-group.com/about-us\",\"loadedUrl\":\"https://www.tern-group.com/about-us\",\"uniqueKey\":\"https://www.tern-group.com/about-us\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"enqueueStrategy\":\"same-domain\",\"state\":4}},\"handledAt\":\"2025-03-06T13:06:59.838Z\"}",
 	"method": "GET",
 	"orderNo": null,
 	"retryCount": 0,
