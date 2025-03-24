@@ -1,6 +1,6 @@
 import { Graph, DirectedGraph } from 'typescript-graph';
-import { CDPSession, chromium, Locator, Page } from 'playwright';
-import cssEscape from 'css.escape';  
+import { CDPSession, chromium, ElementHandle, Locator, Page } from 'playwright';
+import { listeners } from 'process';
 
 // Interfaces
 export interface WebComponent {
@@ -42,6 +42,7 @@ export interface InteractiveElementGeneric {
     isExternal?: boolean;
     target?: string;
     events?: string[];
+    selectorsList?: (string | undefined)[];
 }
 
 
@@ -66,8 +67,9 @@ export class Intelligence {
         this.directChildren = new Map();
         this.errorInteractingWithElements = [];
     }
-
+    
     private shouldSkipUrl(url: string): boolean {
+        // Original auth-related checks
         const skipKeywords = new Set([
             'login', 'signin', 'sign-in', 'signup', 'sign-up', 'register',
             'authentication', 'auth', 'password', 'account'
@@ -80,11 +82,26 @@ export class Intelligence {
             // Get the last segment of the path
             const lastSegment = path.split('/').filter(Boolean).pop()?.toLowerCase() || '';
         
-            const shouldSkip = skipKeywords.has(lastSegment);
-            if (shouldSkip) {
+            // Check for auth-related URLs
+            const isAuthUrl = skipKeywords.has(lastSegment);
+            
+            // Check for non-HTML resources
+            const fileExtension = lastSegment.includes('.') ? lastSegment.split('.').pop()?.toLowerCase() : '';
+            const nonHtmlExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 
+                                      'rar', 'exe', 'mp3', 'mp4', 'avi', 'mov', 'jpg', 'jpeg', 
+                                      'png', 'gif', 'svg', 'webp', 'csv', 'txt'];
+            
+            const isNonHtmlResource = fileExtension ? nonHtmlExtensions.includes(fileExtension) : false;
+            
+            if (isAuthUrl) {
                 console.log('⚠️ Skipping auth page:', lastSegment);
             }
-            return shouldSkip;
+            
+            if (isNonHtmlResource) {
+                console.log(`⚠️ Skipping non-HTML resource: ${url} (${fileExtension} file)`);
+            }
+            
+            return isAuthUrl || isNonHtmlResource;
         } catch (error) {
             console.warn('Invalid URL:', url);
             return false;
@@ -172,63 +189,206 @@ export class Intelligence {
     
         const processNode = async (node: DOMNode): Promise<boolean> => {
             try {
-                // Ensure we have either nodeId or backendNodeId
                 if (!node.nodeId && !node.backendNodeId) {
                     console.log('⚠️ Node missing both nodeId and backendNodeId, skipping');
                     return false;
                 }
-                const nodeDetails = await this.getNodeDetails(client, node.nodeId, node.backendNodeId);
-                if (!nodeDetails) {
-                    console.log('⚠️ Node details not found, skipping');
-                    return false;
-                }
-
-                const nodeName = nodeDetails.nodeName.toLowerCase();
-                if (this.shouldSkipNode(nodeName)) {
-                    console.log(`Skipping non-interactive node: ${nodeName}`);
-                    return false;
-                }
-
-                console.log(`\nChecking node: ${nodeDetails.nodeName} (Node ID: ${nodeDetails.nodeId}, Backend Node ID: ${nodeDetails.backendNodeId})`);
-
-                // Process children first
-                let childHasListeners = false;
-                console.log(`Processing children of ${nodeDetails.nodeName}`);
-                console.log(`Children: ${nodeDetails.children?.map(c => c.backendNodeId).join(', ')}`);
-                
-                if (nodeDetails.children) {
-                    for (const child of nodeDetails.children) {
-                        const hasListeners = await processNode(child);
-                        if (hasListeners) {
-                            childHasListeners = true;
+    
+                // First resolve the node
+                const resolveParams = node.nodeId > 0 ? { nodeId: node.nodeId } : { backendNodeId: node.backendNodeId };
+                const { object } = await client.send('DOM.resolveNode', resolveParams);
+                 
+                if (object?.objectId) {
+                    // Check if node is visible
+                    const { result } = await client.send('Runtime.callFunctionOn', {
+                        functionDeclaration: `function() {
+                            if (this instanceof Element) {
+                                const style = window.getComputedStyle(this);
+                                return {
+                                    isVisible: style.display !== 'none' && 
+                                             style.visibility !== 'hidden' && 
+                                             style.opacity !== '0'
+                                };
+                            }
+                            return { isVisible: true }; // Document and other non-Element nodes are always visible
+                        }`,
+                        objectId: object.objectId, 
+                        returnByValue: true
+                    });
+    
+                    const nodeDetails = await this.getNodeDetails(client, node.nodeId, node.backendNodeId);
+                    if (!nodeDetails) {
+                        console.log('⚠️ Node details not found, skipping');
+                        return false;
+                    }
+    
+                    const nodeName = nodeDetails.nodeName.toLowerCase();
+                    if (this.shouldSkipNode(nodeName)) {
+                        return false;
+                    }
+        
+                    if (!result.value?.isVisible) {
+                        console.log('Node is not visible');
+                        return false;
+                    } 
+    
+                    // Process children first
+                    let childHasListeners = false;
+                    
+                    if (nodeDetails.children) {
+                        for (const child of nodeDetails.children) {
+                            const hasListeners = await processNode(child);
+                            if (hasListeners) {
+                                childHasListeners = true;
+                            }
                         }
                     }
-                }
-
-                // If a child has listeners, skip processing this node
-                if (childHasListeners) {
-                    console.log('⚠️ Skipping parent node as child has listeners:', {
-                        parent: nodeDetails.nodeName
-                    });
-                    return true;
-                }
-
-                // Get this node's listeners
-                const listeners = await this.getNodeEventListeners(client, nodeDetails);
-                
-                if (listeners.length > 0 && this.isInteractiveElement(nodeName)) {
-                    console.log(`✨ Found interactive ${nodeName} with ${listeners.length} listeners`);
-                    const element = await this.createInteractiveElement(nodeDetails, listeners, page);
-                    if (element) {
-                        element.events = listeners.map(l => l.type);
-                        interactiveElements.push(element);
-                        console.log(`Added element with selector: ${element.selector}, events: ${element.events.join(', ')}`);
+    
+                    // Special handling for NAV and FORM elements - don't skip them even if children have listeners
+                    const isSpecialContainer = ['nav', 'form'].includes(nodeName.toLowerCase());
+                    
+                    if (childHasListeners && !isSpecialContainer) {
+                        console.log(`⚠️ Skipping parent node as child has listeners:`, { parent: nodeDetails.nodeName });
+                        return true;
+                    }
+    
+                    const listeners = await this.getNodeEventListeners(client, nodeDetails);
+                    
+                    // Special handling for FORM elements
+                    if (nodeName === 'form' || (listeners.length > 0 && this.isInteractiveElement(nodeName))) {
+                        console.log(`✨ Found interactive ${nodeName} with ${listeners.length} listeners`);
+                        
+                        // Get a11y info
+                        await client.send('Accessibility.enable');
+                        const { nodes } = await client.send('Accessibility.getAXNodeAndAncestors', {
+                            backendNodeId: nodeDetails.backendNodeId
+                        });
+    
+                        const a11yInfo = {
+                            role: nodes[0]?.role?.value,
+                            name: nodes[0]?.name?.value,
+                            ignored: nodes[0]?.ignored,
+                            ignoredReasons: nodes[0]?.ignoredReasons
+                        };
+                        console.log('Accessibility info:', a11yInfo);
+    
+                        // For forms, extract form inputs and submit buttons
+                        if (nodeName === 'form') {
+                            console.log('Processing form element');
+                            
+                            // Get form attributes
+                            const attrs = this.processAttributes(nodeDetails.attributes);
+                            
+                            // Use Playwright to get form inputs
+                            try {
+                                // Create a selector for this form
+                                let formSelector = 'form';
+                                if (attrs.id) formSelector = `form#${attrs.id}`;
+                                else if (attrs.name) formSelector = `form[name="${attrs.name}"]`;
+                                else if (attrs.class) formSelector = `form.${attrs.class.replace(/ /g, '.')}`;
+                                
+                                const formLocator = page.locator(formSelector);
+                                if (await formLocator.count() > 0) {
+                                    // Get form inputs
+                                    const inputs = await formLocator.locator('input:not([type="hidden"]), select, textarea').all();
+                                    const formInputs = [];
+                                    
+                                    for (const input of inputs) {
+                                        const [inputType, inputName, inputId, inputPlaceholder] = await Promise.all([
+                                            input.getAttribute('type').catch(() => 'text'),
+                                            input.getAttribute('name').catch(() => null),
+                                            input.getAttribute('id').catch(() => null),
+                                            input.getAttribute('placeholder').catch(() => null)
+                                        ]);
+                                        
+                                        formInputs.push({
+                                            type: inputType,
+                                            name: inputName,
+                                            id: inputId,
+                                            placeholder: inputPlaceholder
+                                        });
+                                    }
+                                    
+                                    // Get submit buttons
+                                    const submitButtons = await formLocator.locator('button[type="submit"], input[type="submit"]').all();
+                                    const formButtons = [];
+                                    
+                                    for (const button of submitButtons) {
+                                        const [buttonText, buttonValue] = await Promise.all([
+                                            button.innerText().catch(() => null),
+                                            button.getAttribute('value').catch(() => null)
+                                        ]);
+                                        
+                                        formButtons.push({
+                                            text: buttonText,
+                                            value: buttonValue
+                                        });
+                                    }
+                                    
+                                    // Create form element with detailed info
+                                    const formElement: InteractiveElementGeneric = {
+                                        type: 'form',
+                                        name: a11yInfo.name || attrs.id || attrs.name || 'Form',
+                                        id: `form-${attrs.id || attrs.name || 'unnamed'}`,
+                                        role: a11yInfo.role || 'form',
+                                        attributes: attrs,
+                                        events: ['submit'],
+                                        formInfo: {
+                                            inputs: formInputs,
+                                            submitButtons: formButtons,
+                                            action: attrs.action,
+                                            method: attrs.method || 'get'
+                                        }
+                                    };
+                                    
+                                    interactiveElements.push(formElement);
+                                    
+                                    // Also add the submit button as a separate interactive element
+                                    if (submitButtons.length > 0) {
+                                        const submitButton = submitButtons[0];
+                                        const buttonText = await submitButton.innerText().catch(() => 
+                                            submitButton.getAttribute('value').catch(() => 'Submit'));
+                                        
+                                        const submitElement: InteractiveElementGeneric = {
+                                            type: 'button',
+                                            name: buttonText || 'Submit',
+                                            id: `submit-${attrs.id || attrs.name || 'form'}`,
+                                            role: 'button',
+                                            events: ['click'],
+                                            formInfo: {
+                                                formId: attrs.id,
+                                                formName: attrs.name,
+                                                isSubmit: true
+                                            }
+                                        };
+                                        
+                                        interactiveElements.push(submitElement);
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error processing form with Playwright:', error);
+                            }
+                        } else {
+                            // Regular interactive element
+                            const element = {
+                                type: nodeName,
+                                name: a11yInfo.name || nodeDetails.nodeValue || nodeDetails.localName || '',
+                                role: a11yInfo.role,
+                                events: listeners.map(l => l.type)
+                            };
+                            
+                            const interactiveElement = await this.createInteractiveElement(nodeDetails, element);
+                            if (interactiveElement) {
+                                interactiveElements.push(interactiveElement);
+                            }
+                        }
+                        
                         return true;
                     }
                 }
-
                 return false;
-            } catch (error) {
+            } 
+            catch (error) {
                 console.error(`Error processing node ${node.nodeName}:`, error);
                 return false;
             }
@@ -291,6 +451,7 @@ export class Intelligence {
         try {
             const describeParams = nodeId > 0 ? { nodeId, depth: -1 } : { backendNodeId, depth: -1 };
             const { node } = await client.send('DOM.describeNode', describeParams);
+            
             return node;
         } 
         catch (error) {
@@ -322,198 +483,24 @@ export class Intelligence {
         ].filter(Boolean);
     
         const stableId = idParts.join('-');
-        console.log('Generated ID:', stableId);
         return stableId;
     }
     
-    // private async generateSelector(element: DOMNode, attrs: any, page: Page): Promise<string | null> {
-    //     console.log('\n🎯 Attempting to generate valid selector (Chrome Recorder style)');
     
-    //     // Selector attempts ordered by Chrome Recorder's preferences
-    //     const selectorAttempts = [
-    //         // 1. aria selectors (Chrome Recorder's top preference)
-    //         () => attrs.role && attrs['aria-label'] ? 
-    //             `aria/${attrs['aria-label']}[role="${attrs.role}"]` : null,
-    
-    //         // 2. role-based aria
-    //         () => attrs.role ? `[role="${attrs.role}"]` : null,
-    
-    //         // 3. text-based selectors
-    //         () => element.nodeValue?.trim() ? 
-    //             `text=${element.nodeValue.trim()}` : null,
-    
-    //         // 4. data-testid
-    //         () => attrs['data-testid'] ? 
-    //             `[data-testid="${attrs['data-testid']}"]` : null,
-    
-    //         // // 5. CSS selectors with tag and class
-    //         // () => attrs.class ? 
-    //         //     `${element.nodeName.toLowerCase()}.${attrs.class.split(' ').map(c => this.escapeSelector(c)).join('.')}` : null,
-
-    //             // 5. Direct class-based selector (Playwright style)
-    //         () => {
-    //             if (!attrs.class) return null;
-    //             const selector = `${element.nodeName.toLowerCase()}.${attrs.class
-    //                 .split(' ')
-    //                 .map(c => cssEscape(c))
-    //                 .join('.')}`;
-    //             console.log('Generated Playwright selector:', selector);
-    //             return selector;
-    //         },
-
-    //         // 5. Class-based selectors with text content
-    //         () => {
-    //             if (!attrs.class) return null;
-    //             const classNames = attrs.class.split(' ')
-    //                 .map((c: string) => cssEscape(c)) // Use cssEscape instead of JSON.stringify
-    //                 .join('.');
-    //             const baseSelector = `${element.nodeName.toLowerCase()}.${classNames}`;
-                
-    //             // If element has text content, use it to make selector unique
-    //             if (element.nodeValue?.trim()) {
-    //                 return `${baseSelector}:has-text("${element.nodeValue.trim()}")`;
-    //             }
-                
-    //             // If element has children with text, use that
-    //             return `${baseSelector}:has(text="${attrs['aria-label'] || ''}")`;
-    //         },
-
-    //         // 6. Class-based with nth-child (using actual index)
-    //         async () => {
-    //             if (!attrs.class) return null;
-    //             const classNames = attrs.class.split(' ')
-    //                 .map((c: string) => cssEscape(c)) // Use cssEscape instead of JSON.stringify
-    //                 .join('.');
-    //             const baseSelector = `${element.nodeName.toLowerCase()}.${classNames}`;
-                
-    //             // Find the actual index of this element
-    //             const elements = await page.$$(baseSelector);
-    //             if (elements.length > 1) {
-    //                 for (let i = 0; i < elements.length; i++) {
-    //                     const elementHandle = elements[i];
-    //                     const backendNodeId = await elementHandle.evaluate(el => 
-    //                         (el as any)._backendNodeId || (el as any).getNodeId());
-                        
-    //                     if (backendNodeId === element.backendNodeId) {
-    //                         return `${baseSelector}:nth-match(${i + 1})`;
-    //                     }
-    //                 }
-    //             }
-                
-    //             return baseSelector;
-    //         },
-    
-    //         // 7. id-based
-    //         () => attrs.id ? `#${this.escapeSelector(attrs.id)}` : null,
-    
-    //         // 8. xpath as last resort
-    //         () => `xpath=//html/body//${element.nodeName.toLowerCase()}[${element.nodeId || 1}]`
-    //     ];
-    
-    //     // Try each strategy until we find a valid selector
-    //     for (const attempt of selectorAttempts) {
-    //         const selector = await attempt();
-    //         if (selector) {
-    //             const validSelector = await this.validateSelector(selector, page);
-    //             if (validSelector) {
-    //                 console.log(`✅ Found valid selector: ${validSelector}`);
-    //                 return validSelector;
-    //             }
-    //         }
-    //     }
-    
-    //     console.log('❌ No valid selector found');
-    //     return null;
-    // }
-
-    private async generateSelector(element: DOMNode, attrs: any, page: Page): Promise<string | null> {
+    private async validateSelector(selector: string, page: Page): Promise<boolean> {
         try {
-            // First get all Playwright's selectors with element properties
-            const allSelectors = await page.evaluate(() => {
-                return Array.from(document.querySelectorAll('*'))
-                    .filter(el => !['script', 'style', 'link', 'meta'].includes(el.tagName.toLowerCase()))
-                    .map(el => ({
-                        selector: `${el.tagName.toLowerCase()}${
-                            typeof el.className === 'string' 
-                            ? '.' + el.className.replace(/ /g, '.')
-                            : (el.className as SVGAnimatedString)?.baseVal 
-                                ? '.' + (el.className as SVGAnimatedString).baseVal.replace(/ /g, '.')
-                                : ''
-                        }`,
-                        tag: el.tagName.toLowerCase(),
-                        classes: typeof el.className === 'string' ? el.className : (el.className as SVGAnimatedString)?.baseVal || '',
-                        role: el.getAttribute('role'),
-                        ariaLabel: el.getAttribute('aria-label'),
-                        id: el.id
-                    }));
-            });
-            // Find matching element
-            const match = allSelectors.find(s => {
-                const ourSelector = `${element.nodeName.toLowerCase()}.${attrs.class.replace(/ /g, '.')}`;
-                console.log('Our selector:', ourSelector);
-                console.log('Playwright selector:', s.selector);
-                return s.tag === element.nodeName.toLowerCase() &&
-                    s.classes === attrs.class;
-            });
-
-            // if (match) {
-            //     console.log('Found matching selector:', match.selector);
-            //     return await this.validateSelector(match.selector, page);
-            // }
-            console.log("match", match);
-            if (match) {
-                console.log('Found matching selector:', match.selector);
-                return match.selector;
-            }
-
-            return null;
-
-        } 
-        catch (error) {
-            console.log('Error finding selector:', error);
-            return null;
-        }
-    }
-
-
-    
-    private async validateSelector(selector: string, page: Page): Promise<string | null> {
-        try {
-            // Use Locator instead of page.$
-            const locator = page.locator(selector);
-            
-            // Check if element exists and is visible
-            const count = await locator.count();
-            if (count === 0) {
-                console.log(`Element not found: ${selector}`);
-                return null;
-            }
-            
-            const isVisible = await locator.first().isVisible();
-            if (!isVisible) {
-                console.log(`Element not visible: ${selector}`);
-                return null;
-            }
-            
-            // Check if selector is unique
-            if (count > 1) {
-                console.log(`Selector not unique: ${selector} (${count} matches)`);
-                return null;
-            }
-            
-            return selector;
-        } catch (error) {
-            console.log(`Error validating selector: ${selector}`, error);
-            return null;
+            // Check if selector exists and is unique
+            const count = await page.locator(selector).count();
+            return count > 0;
+        } catch {
+            return false;
         }
     }
 
     private processAttributes(attributes: string[] | undefined): { [key: string]: string } {
         console.log('\n📝 Processing attributes');
-        console.log('Raw attributes:', attributes);
     
         if (!attributes || !Array.isArray(attributes)) {
-            console.log('No attributes to process');
             return {};
         }
     
@@ -523,245 +510,257 @@ export class Intelligence {
                 const key = attributes[i];
                 const value = attributes[i + 1];
                 result[key] = value;
-                console.log(`Processed attribute: ${key} = ${value}`);
             }
         }
     
-        console.log('Final processed attributes:', result);
         return result;
     }
 
-    private createLinkElement(element: DOMNode, attrs: any, elementId: string, selector: string) {
-        console.log('\n🔗 Creating link element');
-        console.log('Element details:', {
-            nodeName: element.nodeName,
-            href: attrs.href,
-            id: elementId,
-            selector: selector
-        });
-
-        const linkElement: InteractiveElementGeneric = {
-            type: 'link',
-            name: element.nodeValue || attrs.href,
-            id: elementId,
-            selector: selector,
-            href: attrs.href,
-            role: attrs.role,
-            attributes: attrs,
-            isExternal: attrs.href.startsWith('http') || attrs.href.startsWith('//'),
-            target: attrs.target || '_self'
-        };
-
-        console.log('Created link element:', linkElement);
-        return linkElement;
-    }
-    
-    private async createInteractiveElement(node: DOMNode, listeners: any[], page: Page): Promise<InteractiveElementGeneric | null> {
+    private async createInteractiveElement(node: DOMNode, element: any) {
         console.log('\n🔨 Creating interactive element...');
         
         const attrs = this.processAttributes(node.attributes);
-        const primaryListener = listeners[0];
         const elementId = this.generateElementId(node, attrs);
-        const validSelector = await this.generateSelector(node, attrs, page);
-    
-        if (!validSelector) {
-            console.log('❌ No valid selector found for element');
+
+        if (element.name.toLowerCase().includes('cookies')) {
             return null;
         }
     
-        console.log('Element details:', {
-            type: node.nodeName,
-            id: elementId,
-            selector: validSelector,
-            listeners: listeners.map(l => l.type)
-        });
-    
-        if (node.nodeName.toLowerCase() === 'a' && attrs.href) {
-            return this.createLinkElement(node, attrs, elementId, validSelector);
-        }
-        
-        return {
+        const interactiveElement: InteractiveElementGeneric = {
             type: node.nodeName.toLowerCase(),
-            name: node.nodeValue || node.localName || 'Unnamed Element',
+            name: element.name || node.nodeValue || node.localName || '',
             id: elementId,
-            selector: validSelector,
-            role: attrs.role,
-            attributes: attrs
+            role: element.role,
+            attributes: attrs,
+            href: attrs.href,
+            target: attrs.target || '_self',
+            events: element.events
         };
+
+        console.log('Element details:', interactiveElement);
+        return interactiveElement;
     }
         
 
-    async expandTree(url: string, page?: Page, interactiveElement?: InteractiveElementGeneric, currentPath: Set<string> = new Set()) {
+    async expandTree(url: string, page?: Page, interactiveElement?: InteractiveElementGeneric, currentPath: Set<string> = new Set(), depth: number = 0) {
         console.log('\n=== EXPAND TREE START ===');
         console.log(`URL: ${url}`);
-
-        if (this.shouldSkipUrl(url)) {
-            console.log('⚠️ Skipping authentication-related URL:', url);
+        console.log(`Current depth: ${depth}`);
+    
+        // Add maximum recursion depth to prevent infinite loops
+        const MAX_DEPTH = 10;
+        if (depth > MAX_DEPTH) {
+            console.log(`⚠️ Maximum recursion depth (${MAX_DEPTH}) reached. Stopping exploration.`);
             return;
         }
-
-        console.log(`Interactive Element: ${interactiveElement?.id || 'none'}`);
-        console.log(`Current Path Size: ${currentPath.size}`);
-        console.log(`Current Path Contents: ${Array.from(currentPath).join(', ')}`);
-        // Only check currentPath for new URL navigation, not for interactions
-
-        // Check for cycle
-        if (!interactiveElement && currentPath.has(url)) {
-            console.log('⚠️ Cycle detected! URL already in current path. Returning.');
+    
+        // Check if we should skip this URL
+        if (this.shouldSkipUrl(url)) {
+            console.log('⚠️ Skipping URL:', url);
             return;
-        }    
-
+        }
+    
+        // Create a unique ID for this element to detect cycles
+        const elementId = interactiveElement ? 
+            `${url}::${interactiveElement.type}::${interactiveElement.name}` : url;
+        
+        // Check for cycle in element interaction
+        if (currentPath.has(elementId)) {
+            console.log('⚠️ Cycle detected! Element or URL already in current path. Returning.');
+            console.log('Current path:', Array.from(currentPath));
+            return;
+        }
+        
+        // Add to current path
+        currentPath.add(elementId);
+        console.log(`Added to path: ${elementId}`);
+        console.log(`Current path size: ${currentPath.size}`);
+    
         let shouldClosePage = false;
         if (!page) {
-            console.log('Creating new browser page...');
             const browser = await chromium.launch({ headless: true });
             page = await browser.newPage();
             try {
                 console.log(`Navigating to ${url}...`);
-                await page.goto(url);
+                
+                // Set a timeout for navigation to prevent hanging on problematic resources
+                await page.goto(url, { 
+                    timeout: 30000,  // 30 second timeout
+                    waitUntil: 'domcontentloaded'  // Don't wait for full page load, just DOM
+                });
+                
                 shouldClosePage = true;
                 console.log('Navigation successful');
             } 
             catch (error) {
                 console.error('❌ Navigation failed:', error);
                 await browser.close();
-                throw error;
+                currentPath.delete(elementId);
+                return;
             }
         }
     
         try {
+            // If we have an interactive element, interact with it
             if (interactiveElement) {
-                console.log('\n🔄 Processing Interactive Element:');
-                if (this.shouldSkipElement(interactiveElement)) {
-                    console.log('⚠️ Skipping authentication-related element:', interactiveElement.id);
-                    return;
-                }
+                console.log('🔄 Processing Interactive Element:');
                 console.log(`Type: ${interactiveElement.type}`);
                 console.log(`ID: ${interactiveElement.id}`);
                 console.log(`Selector: ${interactiveElement.selector}`);
-                // Handle interactive element
+                
+                // Skip if we should skip this element
+                if (this.shouldSkipElement(interactiveElement)) {
+                    console.log('⚠️ Skipping authentication-related element');
+                    currentPath.delete(elementId);
+                    return;
+                }
+                
                 try {
                     // Perform the interaction
                     console.log('Attempting interaction...');
-                    await this.performFullInteraction(page, interactiveElement);
+                    const interactionSuccess = await this.performFullInteraction(page, interactiveElement);
                     
-                    // Get new URL or state after interaction
+                    if (!interactionSuccess) {
+                        console.log('⚠️ Interaction failed, skipping further exploration');
+                        currentPath.delete(elementId);
+                        return;
+                    }
+                    
+                    // Get new URL after interaction
                     const newUrl = page.url();
                     console.log(`URL after interaction: ${newUrl}`);
-
                     
+                    // If URL changed, explore the new URL
                     if (newUrl !== url) {
-                        // If interaction led to new URL, expand that tree
-                        console.log('🌐 URL changed after interaction, expanding new URL tree');
-                        await this.expandTree(newUrl, page, undefined, currentPath);
+                        console.log('🌐 URL changed after interaction, exploring new URL');
+                        await this.expandTree(newUrl, page, undefined, currentPath, depth + 1);
                     } 
                     else {
-                        // Get fresh elements after interaction
+                        // Extract new elements after interaction
                         console.log('Extracting new elements after interaction...');
                         const newElements = await this.extractInteractiveElements(url);
                         console.log(`Found ${newElements.length} new elements`);
-
+                        console.log('tree', this.webAppGraph);
+                        
+                        // Process each new element
                         for (const element of newElements) {
-                            const elementId = `${element.id}`;
-                            console.log(`\nProcessing new element: ${elementId}`);
-
-                            if (!this.visitedElements.has(elementId)) {
-                                console.log('Element not visited before, processing...');
-                                const elementComponent: WebComponent = {
-                                    name: element.name,
-                                    type: element
-                                };
-    
-                                if (!this.webAppGraph.getNode(elementComponent.name)) {
-                                    console.log('Adding new node to graph');
-                                    this.webAppGraph.insert(elementComponent);
+                            // Create a unique ID for this element
+                            const newElementId = `${element.id}`;
+                            console.log(`\nProcessing new element: ${newElementId}`);
+                            
+                            // Skip if we've already visited this element on this page
+                            if (this.visitedElements.has(newElementId)) {
+                                console.log('Element already visited, skipping');
+                                continue;
+                            }
+                            
+                            // Mark as visited
+                            this.visitedElements.add(newElementId);
+                            console.log('Element not visited before, processing...');
+                            
+                            // Add to graph
+                            const elementComponent: WebComponent = {
+                                name: element.name,
+                                type: element
+                            };
+                            
+                            if (!this.webAppGraph.getNode(elementComponent.name)) {
+                                console.log('Adding new node to graph');
+                                this.webAppGraph.insert(elementComponent);
+                                
+                                // Add edge from current element to new element
+                                if (interactiveElement) {
                                     this.addEdgeWithTracking(interactiveElement.name, element.name);
                                 }
-                                
-                                await this.expandTree(url, page, element, currentPath);
                             }
-                            else {
-                                console.log('Element already visited, skipping');
-                            }
+                            
+                            // Recursively explore this element
+                            await this.expandTree(url, page, element, currentPath, depth + 1);
                         }
                     }
                 } 
                 catch (error) {
-                    console.error(`Error interacting with element: ${interactiveElement.selector}`, error);
+                    console.error(`Error interacting with element: ${interactiveElement.name}`, error);
                     this.errorInteractingWithElements.push(interactiveElement);
                 }
             } 
             else {
-                // Handle new URL navigation
-                console.log('\n🌐 Processing New URL:');
-                currentPath.add(url);
-                
-                console.log('Extracting interactive elements...');
-                const interactiveElements = await this.extractInteractiveElements(url);
-                console.log(`Found ${interactiveElements.length} interactive elements`);
-
-                // Filter out login/signup elements
-                const filteredElements = interactiveElements.filter(element => !this.shouldSkipElement(element));
-                console.log(`Filtered to ${filteredElements.length} non-auth elements`);
-
-                const currentPage: WebPage = { url, interactiveElements };
-                const rootComponent: WebComponent = {
+                // No interactive element provided, so this is a new URL
+                // Add the URL as a node in the graph
+                const urlComponent: WebComponent = {
                     name: url,
-                    type: currentPage
+                    type: { url, interactiveElements: [] }
                 };
-    
-                if (!this.webAppGraph.getNode(rootComponent.name)) {
-                    console.log('Adding new page to graph');
-                    this.webAppGraph.insert(rootComponent);
+                
+                if (!this.webAppGraph.getNode(urlComponent.name)) {
+                    console.log('Adding URL node to graph');
+                    this.webAppGraph.insert(urlComponent);
                 }
-    
-                // Process all interactive elements
-                for (const element of interactiveElements) {
+                
+                // Extract interactive elements from this URL
+                console.log('Extracting interactive elements from URL...');
+                const elements = await this.extractInteractiveElements(url);
+                console.log(`Found ${elements.length} interactive elements`);
+                
+                // Update the URL node with the elements
+                const urlNode = this.webAppGraph.getNode(url);
+                if (urlNode) {
+                    (urlNode.type as WebPage).interactiveElements = elements;
+                }
+                
+                // Process each element
+                for (const element of elements) {
                     const elementId = `${element.id}`;
                     console.log(`\nProcessing element: ${elementId}`);
-
+                    
+                    // Skip if we've already visited this element
                     if (this.visitedElements.has(elementId)) {
                         console.log('Element already visited, skipping');
                         continue;
                     }
-
-                    console.log('Marking element as visited');
+                    
+                    // Mark as visited
                     this.visitedElements.add(elementId);
-    
+                    console.log('Element not visited before, processing...');
+                    
+                    // Add to graph
                     const elementComponent: WebComponent = {
                         name: element.name,
                         type: element
                     };
-    
+                    
                     if (!this.webAppGraph.getNode(elementComponent.name)) {
                         console.log('Adding element node to graph');
                         this.webAppGraph.insert(elementComponent);
-                        this.addEdgeWithTracking(rootComponent.name, elementComponent.name);
+                        this.addEdgeWithTracking(url, elementComponent.name);
                     }
-    
+                    
+                    // If it's a link, follow it
                     if ('href' in element && element.href) {
                         console.log(`Processing href: ${element.href}`);
                         const nextUrl = this.getNavigationUrl(element.href, new URL(url));
                         if (nextUrl) {
                             console.log(`Valid navigation URL found: ${nextUrl}`);
-                            await this.expandTree(nextUrl, undefined, undefined, currentPath);
+                            await this.expandTree(nextUrl, undefined, undefined, currentPath, depth + 1);
                         }
                     } 
                     else {
+                        // Otherwise, interact with it on the current page
                         console.log('Processing non-href element recursively');
-                        await this.expandTree(url, page, element, currentPath);
+                        await this.expandTree(url, page, element, currentPath, depth + 1);
                     }
                 }
-                
-                console.log(`Removing ${url} from current path`);
-                currentPath.delete(url);
             }
         } 
         catch (error) {
             console.error(`Error in expandTree: ${error}`);
-            throw error;
         }
         finally {
+            // Remove from current path when done
+            currentPath.delete(elementId);
+            console.log(`Removed from path: ${elementId}`);
+            
+            // Close page if we opened it
             if (shouldClosePage && page) {
                 await page.context().browser()?.close();
             }
@@ -769,130 +768,202 @@ export class Intelligence {
         }
     }
 
-    // // Helper method to perform full interaction chain - COME BACK IF NEEDED 
-    // private async performFullInteraction(page: Page, element: InteractiveElementGeneric) {
-    //     switch(element.type) {
-    //         case 'interaction-chain':
-    //             // Click the trigger element
-    //             await page.click(element.triggerElement.selector || element.triggerElement.id);
-    //             await page.waitForLoadState('networkidle');
-    
-    //             // Wait for and handle dynamic content based on relationships
-    //             if (element.relationships?.controlsId) {
-    //                 await page.waitForSelector(`#${element.relationships.controlsId}`);
-    //                 // Interact with controlled element if needed
-    //             }
-    
-    //             if (element.relationships?.ownsId) {
-    //                 await page.waitForSelector(`#${element.relationships.ownsId}`);
-    //                 // Interact with owned element if needed
-    //             }
-    
-    //             if (element.relationships?.expectedRole) {
-    //                 await page.waitForSelector(`[role="${element.relationships.expectedRole}"]`);
-    //                 // Handle specific roles
-    //                 switch (element.relationships.expectedRole) {
-    //                     case 'listbox':
-    //                         const options = await page.$$('[role="option"]');
-    //                         if (options.length > 0) {
-    //                             await options[0].click();
-    //                         }
-    //                         break;
-    //                     case 'menu':
-    //                         const menuItems = await page.$$('[role="menuitem"]');
-    //                         if (menuItems.length > 0) {
-    //                             await menuItems[0].click();
-    //                         }
-    //                         break;
-    //                     case 'dialog':
-    //                         // Handle dialog content
-    //                         break;
-    //                 }
-    //             }
-    //             break;
-    
-    //         case 'button':
-    //         case 'link':
-    //             await page.click(element.selector || '');
-    //             await page.waitForLoadState('networkidle');
-    //             break;
-                
-    //         case 'form':
-    //             // Fill all inputs
-    //             for (const input of element.inputElements || []) {
-    //                 await page.fill(input.selector, 'test');
-    //             }
-    //             // Click submit button
-    //             if (element.buttonElements && element.buttonElements.length > 0) {
-    //                 await page.click(element.buttonElements[0].selector);
-    //             }
-    //             await page.waitForLoadState('networkidle');
-    //             break;
-                
-    //         case 'select':
-    //             await page.click(element.selector || '');
-    //             // Wait for options to appear
-    //             await page.waitForSelector('option, [role="option"]');
-    //             const options = await page.$$('option, [role="option"]');
-    //             if (options.length > 0) {
-    //                 await options[0].click();
-    //             }
-    //             break;
+    // private async createRobustLocator(page: Page, element: InteractiveElementGeneric): Promise<Locator> {
+    //     if (!element.selectorsList?.length) {
+    //         throw new Error("No selectors available for element");
     //     }
     
-    //     // Add a small delay after all interactions
-    //     await page.waitForTimeout(500);
+    //     // Create array of locators from our selectors list
+    //     const combinedSelectors = element.selectorsList
+    //         .filter(Boolean)
+    //         .join(',');
+    
+    //     // Use race to find the first locator that works
+    //     console.log("combinedSelectors", combinedSelectors);
+    //     return page.locator(combinedSelectors);
     // }
 
-    private async performFullInteraction(page: Page, element: InteractiveElementGeneric) {
-        console.log(`Performing interaction with element: ${element.type}`);
 
-        // Wait for element to be ready
-        await this.waitForElement(page, element);
-
+    async performFullInteraction(page: Page, element: InteractiveElementGeneric): Promise<boolean> {
+        console.log(`Performing interaction with element: ${element.type} - ${element.name}`);
         try {
+            let matchedLocator: Locator | null = null;
+            
+            // Try role + name
+            if (element.role && element.name) {
+                console.log(`Trying getByRole('${element.role}', { name: '${element.name}', exact: true })`);
+                const roleLocator = page.getByRole(element.role as any, { name: element.name, exact: true });
+                console.log("number of role locators", await roleLocator.count());
+                if (await roleLocator.count() > 0) {
+                    console.log('✅ Found by role and name');
+                    matchedLocator = roleLocator;
+                }
+            }
+            
+            // Try text content
+            if (!matchedLocator && element.name) {
+                console.log(`Trying getByText('${element.name}')`);
+                const textLocator = page.getByText(element.name, { exact: true });
+                if (await textLocator.count() > 0) {
+                    console.log('✅ Found by text content');
+                    matchedLocator = textLocator;
+                }
+            }
+            
+            // Try ID
+            if (!matchedLocator && element.attributes?.id) {
+                console.log(`Trying locator('#${element.attributes.id}')`);
+                const idLocator = page.locator(`#${element.attributes.id}`);
+                if (await idLocator.count() === 1) {
+                    console.log('✅ Found by ID');
+                    matchedLocator = idLocator;
+                }
+            }
+            
+            // Try using partial text match
+            if (!matchedLocator && element.name) {
+                console.log(`Trying getByText with partial match: '${element.name}'`);
+                const partialTextLocator = page.getByText(element.name, { exact: false });
+                if (await partialTextLocator.count() === 1) {
+                    console.log('✅ Found by partial text match');
+                    matchedLocator = partialTextLocator;
+                }
+            }
+            
+            // Try using role only
+            if (!matchedLocator && element.role) {
+                console.log(`Trying getByRole('${element.role}')`);
+                const roleOnlyLocator = page.getByRole(element.role as any);
+                if (await roleOnlyLocator.count() === 1) {
+                    console.log('✅ Found by role only');
+                    matchedLocator = roleOnlyLocator;
+                }
+            }
+            
+            // Special case for search buttons
+            if (!matchedLocator && element.type === 'button' && element.name.toLowerCase().includes('search')) {
+                console.log('Trying to find search button by common selectors');
+                const searchButtonSelectors = [
+                    'button[type="submit"]',
+                    'input[type="submit"]',
+                    '.search-submit',
+                    '.search-button',
+                    '[aria-label="Search"]',
+                    '[title="Search"]'
+                ];
+                
+                for (const selector of searchButtonSelectors) {
+                    const buttonLocator = page.locator(selector);
+                    if (await buttonLocator.count() === 1) {
+                        console.log(`✅ Found search button with selector: ${selector}`);
+                        matchedLocator = buttonLocator;
+                        break;
+                    }
+                }
+            }
+            
+            // If we still can't find it, log and return false instead of throwing
+            if (!matchedLocator) {
+                console.log(`⚠️ Could not find a unique matching element for: ${element.type} ${element.name}`);
+                return false;
+            }
+            
+            // Wait for element to be ready
+            await this.waitForElement(page, matchedLocator);
+            
+            // Perform the interaction based on element type
             switch(element.type) {
                 case 'button':
-                case 'link':
-                    await this.handleClickInteraction(page, element);
+                case 'a':
+                    await this.handleClickInteraction(page, matchedLocator);
                     break;
                     
                 case 'input':
                 case 'textarea':
-                    await this.handleInputInteraction(page, element);
+                    if (element.role === 'searchbox') {
+                        await this.handleSearchInteraction(page, matchedLocator);
+                    } else {
+                        await this.handleInputInteraction(page, matchedLocator);
+                    }
                     break;
                     
                 case 'select':
-                    await this.handleSelectInteraction(page, element);
+                    await this.handleSelectInteraction(page, matchedLocator);
                     break;
-
+    
                 case 'form':
-                    await this.handleFormInteraction(page, element);
+                    await this.handleFormInteraction(page, matchedLocator, element);
                     break;
+                    
+                default:
+                    // For any other element type, try clicking
+                    await this.handleClickInteraction(page, matchedLocator);
             }
-
+            
             // Wait for any resulting navigation or network activity
             await this.waitForStability(page);
+            
+            return true;
         } catch (error) {
-            console.error(`Failed to interact with element: ${element.selector}`, error);
-            throw error;
+            console.error(`Error interacting with element: ${element.name}`, error);
+            return false;
         }
     }
 
-    private async handleClickInteraction(page: Page, element: InteractiveElementGeneric) {
-        console.log("clicking on", element.selector);
-        await page.locator(element.selector || '').click();
+    private async handleClickInteraction(page: Page, locator: Locator) {
+        console.log("Attempting to click on", locator);
+        
+        try {
+            // First try: standard click
+            await locator.click({ timeout: 5000 }).catch(async (error) => {
+                console.log("Standard click failed, trying alternative methods:", error.message);
+                
+                // Second try: force click (bypasses pointer event checks)
+                await locator.click({ force: true, timeout: 5000 }).catch(async (error) => {
+                    console.log("Force click failed, trying JavaScript click:", error.message);
+                    
+                    // Third try: JavaScript click
+                    await page.evaluate(selector => {
+                        const element = document.querySelector(selector);
+                        if (element) {
+                            (element as HTMLElement).click();
+                            return true;
+                        }
+                        return false;
+                    }, locator.toString()).catch(async (error) => {
+                        console.log("JavaScript click failed, trying parent element:", error.message);
+                        
+                        // Fourth try: Click parent element
+                        await locator.evaluate(node => {
+                            if (node.parentElement) {
+                                node.parentElement.click();
+                                return true;
+                            }
+                            return false;
+                        }).catch(error => {
+                            console.log("All click methods failed:", error.message);
+                            throw new Error("Unable to click element after multiple attempts");
+                        });
+                    });
+                });
+            });
+            
+            console.log("Click successful");
+        } catch (error) {
+            console.error("Click failed after all attempts:", error);
+            throw error;
+        }
     }
     
-    private async handleInputInteraction(page: Page, element: InteractiveElementGeneric) {
-        console.log("filling in", element.selector);
-        await page.locator(element.selector || '').fill('test');
+    private async handleInputInteraction(page: Page, locator: Locator) {
+        console.log("filling in", locator);
+        await locator.fill('test');
     }
     
-    private async handleSelectInteraction(page: Page, element: InteractiveElementGeneric) {
+    private async handleSelectInteraction(page: Page, locator: Locator) {
         // Click the select container to open it
-        console.log("clicking on", element.selector);
-        await page.locator(element.selector || '').click();
+        console.log("clicking on", locator);
+        await locator.click();
         
         try {
             // Try React Select input
@@ -912,10 +983,10 @@ export class Intelligence {
         }
     }
     
-    private async handleFormInteraction(page: Page, element: InteractiveElementGeneric) {
+    private async handleFormInteraction(page: Page, locator: Locator, element: InteractiveElementGeneric) {
         if (element.inputElements) {
             for (const input of element.inputElements) {
-                await page.fill(input.selector, 'test');
+                await locator.locator(input.selector).fill('test');
             }
         }
         
@@ -923,11 +994,64 @@ export class Intelligence {
             await page.click(element.buttonElements[0].selector);
         }
     }
-    private async waitForElement(page: Page, element: InteractiveElementGeneric) {
+
+    private async handleSearchInteraction(page: Page, locator: Locator) {
+        console.log("Handling search interaction");
+        
+        try {
+            // Fill the search box
+            await locator.fill("test query");
+            
+            // Press Enter to submit
+            await locator.press("Enter");
+            
+            // Wait for navigation or results
+            await this.waitForStability(page);
+            
+            console.log("Search submitted successfully");
+        } catch (error) {
+            console.error("Error during search interaction:", error);
+            
+            // Fallback: try to find and click the search button
+            try {
+                console.log("Trying to find and click search button");
+                
+                // Common search button selectors
+                const searchButtonSelectors = [
+                    'button[type="submit"]',
+                    'input[type="submit"]',
+                    'button.search-submit',
+                    '.search-button',
+                    '[aria-label="Search"]',
+                    '[title="Search"]',
+                    'form button',
+                    'form input[type="image"]'
+                ];
+                
+                // Try each selector
+                for (const selector of searchButtonSelectors) {
+                    const buttonLocator = page.locator(selector);
+                    if (await buttonLocator.count() > 0) {
+                        console.log(`Found search button with selector: ${selector}`);
+                        await buttonLocator.click({ force: true });
+                        await this.waitForStability(page);
+                        console.log("Search button clicked successfully");
+                        return;
+                    }
+                }
+                
+                throw new Error("Could not find search button");
+            } catch (buttonError) {
+                console.error("Failed to click search button:", buttonError);
+                throw error; // Throw the original error
+            }
+        }
+    }
+
+    private async waitForElement(page: Page, locator: Locator) {
         const timeout = 5000;
         try {
             // Use locator instead of waitForSelector
-            const locator = page.locator(element.selector || '');
             await locator.waitFor({ 
                 state: 'visible',
                 timeout 
@@ -936,7 +1060,7 @@ export class Intelligence {
             // Brief pause to let any initial animations settle
             await page.waitForTimeout(100);
         } catch (error) {
-            console.error(`Element not ready: ${element.selector}`, error);
+            console.error(`Element not ready: ${locator}`, error);
             throw error;
         }
     }
@@ -1034,25 +1158,55 @@ export class Intelligence {
 
     private getNavigationUrl(href: string, baseUrl: URL): string | null {
         try {
-            // Skip login/signup URLs
-            if (this.shouldSkipUrl(href)) {
-                console.log('⚠️ Skipping authentication-related href:', href);
+            // Skip empty or javascript: URLs
+            if (!href || href.startsWith('javascript:') || href.startsWith('#')) {
+                console.log('⚠️ Skipping non-navigational href:', href);
                 return null;
             }
+            
             // Remove query parameters if they cause issues
             const cleanHref = href.split('?')[0];
             
+            // Construct absolute URL
+            let absoluteUrl: string;
+            
             // Handle relative URLs
             if (cleanHref.startsWith('/')) {
-                return baseUrl.origin + cleanHref;
+                absoluteUrl = baseUrl.origin + cleanHref;
+            }
+            // Handle absolute URLs
+            else if (cleanHref.startsWith('http')) {
+                absoluteUrl = cleanHref;
+            }
+            // Handle relative URLs without leading slash
+            else if (!cleanHref.includes('://')) {
+                // Get the directory part of the current URL
+                const pathParts = baseUrl.pathname.split('/');
+                pathParts.pop(); // Remove the last part (file or empty string)
+                const directory = pathParts.join('/');
+                
+                absoluteUrl = `${baseUrl.origin}${directory}/${cleanHref}`;
+            }
+            else {
+                console.log('⚠️ Unrecognized URL format:', href);
+                return null;
             }
             
-            // Handle absolute URLs
-            if (cleanHref.startsWith('http')) {
-                return cleanHref;
+            // Skip authentication-related URLs
+            if (this.shouldSkipUrl(absoluteUrl)) {
+                console.log('⚠️ Skipping authentication-related or non-HTML resource URL:', absoluteUrl);
+                return null;
             }
-
-            return null;
+            
+            // Check if it's an external URL
+            const isSameOrigin = new URL(absoluteUrl).origin === baseUrl.origin;
+            if (!isSameOrigin) {
+                console.log(`⚠️ Skipping external URL: ${absoluteUrl}`);
+                return null;
+            }
+            
+            console.log(`✅ Valid navigation URL: ${absoluteUrl}`);
+            return absoluteUrl;
         } 
         catch (error) {
             console.error(`Error processing URL: ${href}`, error);
