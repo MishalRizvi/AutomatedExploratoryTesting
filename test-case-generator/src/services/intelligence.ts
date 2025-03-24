@@ -224,6 +224,7 @@ export class Intelligence {
     
                     const nodeName = nodeDetails.nodeName.toLowerCase();
                     if (this.shouldSkipNode(nodeName)) {
+                        console.log(`Skipping non-interactive node: ${nodeName}`);
                         return false;
                     }
         
