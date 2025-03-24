@@ -2,6 +2,19 @@ import { Graph, DirectedGraph } from 'typescript-graph';
 import { CDPSession, chromium, ElementHandle, Locator, Page } from 'playwright';
 import { listeners } from 'process';
 
+declare global {
+    var testGenerationProgress: {
+      status: string;
+      message: string;
+      timestamp: number;
+      completedSteps?: number;
+      totalSteps?: number;
+      visitedUrls?: string[];
+      interactiveElements?: number;
+      graph?: any;
+    };
+  }
+
 // Interfaces
 export interface WebComponent {
     name: string;
@@ -52,10 +65,10 @@ export interface InteractiveElementGeneric {
 //TODO: Handle hover and see what else needs to be handled - can use hercules? or quora?
 export class Intelligence {
 
-    private webAppGraph: DirectedGraph<WebComponent>;
-    private visitedElements: Set<string>;
-    private directChildren: Map<string, string[]>; // Map to store direct children
-    private errorInteractingWithElements: InteractiveElementGeneric[];
+    public webAppGraph: DirectedGraph<WebComponent>;
+    public visitedElements: Set<string>;
+    public directChildren: Map<string, string[]>; // Map to store direct children
+    public errorInteractingWithElements: InteractiveElementGeneric[];
     private readonly SKIP_KEYWORDS = [
         'login', 'signin', 'sign-in', 'signup', 'sign-up', 'register',
         'authentication', 'auth', 'password', 'account'
@@ -102,14 +115,14 @@ export class Intelligence {
             }
             
             return isAuthUrl || isNonHtmlResource;
-        } catch (error) {
+        } 
+        catch (error) {
             console.warn('Invalid URL:', url);
             return false;
         }
     }
 
     private shouldSkipElement(element: InteractiveElementGeneric): boolean {
-        // Check element text, href, id, and other attributes
         const elementText = element.name?.toLowerCase() || '';
         const elementHref = element.href?.toLowerCase() || '';
         const elementId = element.id?.toLowerCase() || '';
@@ -133,12 +146,7 @@ export class Intelligence {
         if (nodeLower === 'div' && attributes?.class) {
             return attributes.class.includes('cursor-pointer') || attributes.class.includes('!cursor-pointer');
         }
-
         return false;
-    }
-
-    private escapeSelector(str: string): string {
-        return str.replace(/[ "!#$%&'()*+,./:<=>?@[\\\]^`{|}~]/g, '\\$&');    
     }
 
     async extractInteractiveElements(url: string): Promise<InteractiveElementGeneric[]> {
@@ -369,7 +377,8 @@ export class Intelligence {
                             } catch (error) {
                                 console.error('Error processing form with Playwright:', error);
                             }
-                        } else {
+                        } 
+                        else {
                             // Regular interactive element
                             const element = {
                                 type: nodeName,
@@ -487,16 +496,7 @@ export class Intelligence {
         return stableId;
     }
     
-    
-    private async validateSelector(selector: string, page: Page): Promise<boolean> {
-        try {
-            // Check if selector exists and is unique
-            const count = await page.locator(selector).count();
-            return count > 0;
-        } catch {
-            return false;
-        }
-    }
+
 
     private processAttributes(attributes: string[] | undefined): { [key: string]: string } {
         console.log('\n📝 Processing attributes');

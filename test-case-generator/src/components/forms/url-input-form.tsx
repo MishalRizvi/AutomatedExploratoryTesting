@@ -3,131 +3,106 @@
 import { useState } from 'react';
 import { generateTests } from '@/lib/api';
 
-interface UrlFormData {
-    url: string; 
-    username?: string; 
-    password?: string; 
-    requiresAuth: boolean;
-    websiteContext?: string; 
-}
-
-
 export default function UrlInputForm() {
-    const [formData, setFormData] = useState<UrlFormData>({ //formData: current state; setFormData: function to update state 
-        url: '',
-        username: '',
-        password: '',
-        requiresAuth: false,
-        websiteContext: ''
-    });
-
+    const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [result, setResult] = useState<any | null>(null);
+    const [testFlows, setTestFlows] = useState<string[][]>([]);
 
-    //Handle form submission 
-    const handleSubmit = async (e:React.FormEvent) => {
+    // Handle form submission
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true); 
-        setError(null); 
+        setLoading(true);
+        setError(null);
+        setTestFlows([]);
+        
         try {
-            const response = await generateTests(formData);
-            setResult(response);
-        }
-        catch (e) {
-            setError(e instanceof Error ? e.message : 'An unknown error occurred');
-        }
-        finally {
+            // Generate tests and get the results directly
+            const response = await generateTests({ url });
+            
+            if (response && response.flows) {
+                setTestFlows(response.flows);
+            } else {
+                setError('No test flows were generated');
+            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'An unknown error occurred');
+        } finally {
             setLoading(false);
         }
     };
 
-    //Render the form 
     return (
-        <div className="max-w-md mx-auto mt-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="max-w-4xl mx-auto mt-8">
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Generate Test Cases</h2>
+                
                 {/* URL Input */}
-                <div>
-                    <label htmlFor="url" className="block text-sm font-medium mb-1">
+                <div className="mb-6">
+                    <label htmlFor="url" className="block text-sm font-medium text-gray-900 mb-2">
                         Website URL
                     </label>
                     <input 
                         type="url"
                         id="url"
                         required 
-                        className="w-full p-2 border rounded-md"
-                        value={formData.url}
-                        onChange={(e) => setFormData({...formData, url: e.target.value})}
+                        className="w-full p-3 border border-gray-300 rounded-md text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
                         placeholder="https://www.example.com"
+                        disabled={loading}
                     />
+                    <p className="mt-1 text-sm text-gray-600">Enter the URL of the website you want to test</p>
                 </div>
 
-                {/* Website Context Input */}
-                <div>
-                    <label htmlFor="websiteContext" className="block text-sm font-medium mb-1">
-                        Website Context
-                    </label>
-                    <input 
-                        type="text"
-                        id="websiteContext"
-                        required 
-                        className="w-full p-2 border rounded-md"
-                        value={formData.websiteContext}
-                        onChange={(e) => setFormData({...formData, websiteContext: e.target.value})}
-                        placeholder="Enter website context"
-                    />
-                </div>
-
-                {/* Authentication Checkbox */}
-                <div>
-                    <label className="flex items-center">
-                        <input 
-                            type="checkbox"
-                            checked={formData.requiresAuth}
-                            onChange={(e) => setFormData({...formData, requiresAuth: e.target.checked})}
-                            className="mr-2"
-                        />
-                        <span className="text-sm">Requires Authentication</span>
-                    </label>
-                </div>
-
-                {/* Conditional Authentication Fields */}
-                {formData.requiresAuth && (
-                    <> 
-                    {/* Username Input */}
-                    <div>
-                        <label htmlFor="username" className="block text-sm font-medium mb-1">Username</label>
-                        <input id="username" type="text" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} className="w-full p-2 border rounded-md" />
-                    </div>
-                    {/* Password Input */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
-                        <input id="password" type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full p-2 border rounded-md"/>
-                    </div>
-                    </>
-                )}
-                <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded-md">Generate Test Cases</button>
-            </form> 
+                {/* Submit Button */}
+                <button 
+                    type="submit" 
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading || !url}
+                >
+                    {loading ? 'Generating...' : 'Generate Test Cases'}
+                </button>
+            </form>
             
-            {/* Display the result */}
-            {result && (
-                <div className="mt-8 p-4 bg-gray-50 rounded-md">
-                    <h2 className="text-lg font-semibold mb-4">Generated Test Cases</h2>
-                    <pre className="overflow-auto">{JSON.stringify(result, null, 2)}</pre>
-                </div>
-            )}
-
-            {/* Display the error */}
-            {error && (
-                <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-md">
-                    {error}
-                </div>
-            )}
-
             {/* Display the loading state */}
             {loading && (
-                <div className="mt-4 text-center">
-                    <p>Generating tests...</p>
+                <div className="mt-8 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+                    <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 border-t-4 border-b-4 border-indigo-600 rounded-full animate-spin"></div>
+                        <p className="mt-4 text-gray-900 font-medium">Analyzing website and generating tests...</p>
+                        <p className="mt-2 text-gray-700">This may take a minute or two</p>
+                    </div>
+                </div>
+            )}
+            
+            {/* Display the error */}
+            {error && (
+                <div className="mt-8 p-6 bg-red-50 border border-red-200 rounded-lg shadow-md">
+                    <h3 className="text-lg font-semibold text-red-700 mb-2">Error</h3>
+                    <p className="text-red-600">{error}</p>
+                </div>
+            )}
+
+            {/* Display the test flows */}
+            {testFlows.length > 0 && (
+                <div className="mt-8">
+                    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                        <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Generated Test Flows</h2>
+                        
+                        <div className="space-y-4">
+                            {testFlows.map((flow, index) => (
+                                <div key={index} className="bg-gray-50 p-4 rounded-md">
+                                    <h3 className="font-medium text-indigo-700 mb-2">Flow #{index + 1}</h3>
+                                    <ol className="list-decimal list-inside space-y-2 text-gray-900">
+                                        {flow.map((step, stepIndex) => (
+                                            <li key={stepIndex} className="pl-2">{step}</li>
+                                        ))}
+                                    </ol>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

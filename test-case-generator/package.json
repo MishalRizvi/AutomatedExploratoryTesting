@@ -16,6 +16,7 @@
     "cheerio": "^1.0.0",
     "crawlee": "^3.12.2",
     "css.escape": "^1.5.1",
+    "d3": "^7.9.0",
     "dotenv": "^16.4.7",
     "next": "15.1.7",
     "openai": "^4.85.1",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.50.1",
+    "@types/d3": "^7.4.3",
     "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^19",
