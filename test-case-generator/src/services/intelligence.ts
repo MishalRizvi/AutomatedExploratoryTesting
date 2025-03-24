@@ -74,11 +74,21 @@ export class Intelligence {
         'authentication', 'auth', 'password', 'account'
     ];
     
+    private readonly MAX_DEPTH = 10;
+    private readonly MAX_BREADTH = 5;
+    private readonly MAX_PAGES = 50;
+    private pagesProcessed = 0;
+    private startTime = Date.now();
+    private breadthCounters = new Map<number, number>();
+    
     constructor() {
         this.webAppGraph = new DirectedGraph<WebComponent>((n: WebComponent) => n.name);
         this.visitedElements = new Set();
         this.directChildren = new Map();
         this.errorInteractingWithElements = [];
+        
+        // Set up graceful shutdown
+        this.setupGracefulShutdown();
     }
     
     private shouldSkipUrl(url: string): boolean {
@@ -194,6 +204,60 @@ export class Intelligence {
     private async processDocument(page: Page, client: CDPSession, root: DOMNode): Promise<InteractiveElementGeneric[]> {
         console.log('\n🔍 Starting document processing...');
         const interactiveElements: InteractiveElementGeneric[] = [];
+    
+        // First, extract navigation links directly using Playwright
+        console.log('Extracting navigation elements...');
+        try {
+            // Find all links in common navigation areas
+            const navSelectors = [
+                'nav a', 
+                'header a', 
+                '.navigation a', 
+                '.navbar a', 
+                '.menu a', 
+                '.nav-menu a',
+                '[role="navigation"] a',
+                '.header a',
+                '.top-bar a',
+                '#menu a',
+                '#navigation a'
+            ];
+            
+            const navLinks = await page.locator(navSelectors.join(', ')).all();
+            console.log(`Found ${navLinks.length} navigation links`);
+            
+            // Process and add navigation links to interactiveElements
+            for (const link of navLinks) {
+                try {
+                    const href = await link.getAttribute('href');
+                    const text = await link.textContent() || '';
+                    
+                    // Skip if no href
+                    if (!href) continue;
+                    
+                    // Create navigation element
+                    const navElement: InteractiveElementGeneric = {
+                        type: 'a',
+                        name: text.trim(),
+                        id: `navlink-${this.slugify(text.trim())}`,
+                        role: 'link',
+                        attributes: {
+                            href: href
+                        },
+                        href: href,
+                        target: '_self',
+                        events: ['click']
+                    };
+                    
+                    // Add to interactiveElements array
+                    interactiveElements.push(navElement);
+                } catch (error) {
+                    console.error('Error processing navigation link:', error);
+                }
+            }
+        } catch (error) {
+            console.error('Error finding navigation elements:', error);
+        }
     
         const processNode = async (node: DOMNode): Promise<boolean> => {
             try {
@@ -405,7 +469,7 @@ export class Intelligence {
         };
     
         await processNode(root);
-        console.log(`\n🎯 Found ${interactiveElements.length} interactive elements`);
+        console.log(`\n🎯 Found ${interactiveElements.length} total interactive elements`);
         return interactiveElements;
     }
 
@@ -549,9 +613,8 @@ export class Intelligence {
         console.log(`Current depth: ${depth}`);
     
         // Add maximum recursion depth to prevent infinite loops
-        const MAX_DEPTH = 10;
-        if (depth > MAX_DEPTH) {
-            console.log(`⚠️ Maximum recursion depth (${MAX_DEPTH}) reached. Stopping exploration.`);
+        if (depth > this.MAX_DEPTH) {
+            console.log(`⚠️ Maximum recursion depth (${this.MAX_DEPTH}) reached. Stopping exploration.`);
             return;
         }
     
@@ -1214,4 +1277,120 @@ export class Intelligence {
             return null;
         }
     }
+
+    // New helper method to extract navigation elements
+    private async extractNavigationElements(page: Page): Promise<InteractiveElementGeneric[]> {
+        const navElements: InteractiveElementGeneric[] = [];
+        
+        try {
+            // Find all navigation elements using common selectors
+            const navSelectors = [
+                'nav', 
+                'header', 
+                '[role="navigation"]', 
+                '.navigation', 
+                '.navbar', 
+                '.nav', 
+                '#navigation',
+                '#navbar',
+                '#nav'
+            ];
+            
+            // Combine selectors
+            const combinedSelector = navSelectors.join(', ');
+            const navLocators = page.locator(combinedSelector);
+            const count = await navLocators.count();
+            
+            console.log(`Found ${count} navigation containers`);
+            
+            // Process each navigation container
+            for (let i = 0; i < count; i++) {
+                const navElement = navLocators.nth(i);
+                const navId = await navElement.getAttribute('id') || `nav-${i}`;
+                
+                // Get all links in this navigation
+                const links = await navElement.locator('a').all();
+                console.log(`Navigation #${i} (${navId}) has ${links.length} links`);
+                
+                // Process each link
+                for (const link of links) {
+                    const [linkText, linkHref] = await Promise.all([
+                        link.innerText().catch(() => ''),
+                        link.getAttribute('href').catch(() => null)
+                    ]);
+                    
+                    if (linkHref && linkText.trim()) {
+                        // Skip login/auth links
+                        if (this.SKIP_KEYWORDS.some(keyword => 
+                            linkText.toLowerCase().includes(keyword) || 
+                            (linkHref && linkHref.toLowerCase().includes(keyword)))) {
+                            console.log(`Skipping auth-related nav link: ${linkText}`);
+                            continue;
+                        }
+                        
+                        // Create a unique ID for this nav link
+                        const linkElementId = `navlink-${linkText.trim().toLowerCase().replace(/\s+/g, '-')}`;
+                        
+                        const navLinkElement: InteractiveElementGeneric = {
+                            type: 'navlink',
+                            name: linkText.trim(),
+                            id: linkElementId,
+                            role: 'link',
+                            href: linkHref,
+                            events: ['click'],
+                            relationships: {
+                                navGroup: navId,
+                                isNavigation: true
+                            }
+                        };
+
+                        if (!this.visitedElements.has(linkElementId)) {
+                            navElements.push(navLinkElement);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error extracting navigation elements:', error);
+        }
+        
+        return navElements;
+    }
+
+    private setupGracefulShutdown(): void {
+        // Handle Ctrl+C (SIGINT)
+        process.on('SIGINT', async () => {
+            console.log('\n\n');
+            console.log('='.repeat(70));
+            console.log('🛑 Crawler stopped by user (Ctrl+C)');
+            console.log('='.repeat(70));
+            
+            // Print the graph
+            console.log('\n📊 Web Application Graph:');
+            //console.log(JSON.stringify(this.webAppGraph, null, 2));
+            
+            // Print the flows
+            console.log('\n🔄 Flows:');
+            const flows = await this.findAllPathsInGraph();
+            flows.forEach(flow => {
+                console.log("Flow:", flow);
+            });
+            
+            // Exit with a slight delay to ensure logs are printed
+            setTimeout(() => {
+                process.exit(0);
+            }, 500);
+        });
+    }
+
+    // Helper method to create URL-friendly slugs
+    private slugify(text: string): string {
+        return text
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '') // Remove special characters
+            .replace(/\s+/g, '-')     // Replace spaces with hyphens
+            .replace(/-+/g, '-')      // Remove consecutive hyphens
+            .trim();                  // Trim leading/trailing spaces
+    }
+
 }
