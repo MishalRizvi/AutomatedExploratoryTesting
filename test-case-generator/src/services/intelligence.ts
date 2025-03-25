@@ -42,7 +42,7 @@ export interface InteractiveElementGeneric {
     type: string;
     name: string;
     selector?: string;
-    id?: string;
+    elementId: string;
     role?: string;
     href?: string;
     inputElements?: any[]; //locator[]
@@ -69,79 +69,162 @@ export class Intelligence {
     public visitedElements: Set<string>;
     public directChildren: Map<string, string[]>; // Map to store direct children
     public errorInteractingWithElements: InteractiveElementGeneric[];
-    private readonly SKIP_KEYWORDS = [
-        'login', 'signin', 'sign-in', 'signup', 'sign-up', 'register',
-        'authentication', 'auth', 'password', 'account'
-    ];
-    
+    private pageElementsCache = new Map<string, Map<string, InteractiveElementGeneric>>();
     private readonly MAX_DEPTH = 10;
-    private readonly MAX_BREADTH = 5;
-    private readonly MAX_PAGES = 50;
-    private pagesProcessed = 0;
-    private startTime = Date.now();
-    private breadthCounters = new Map<number, number>();
     
     constructor() {
         this.webAppGraph = new DirectedGraph<WebComponent>((n: WebComponent) => n.name);
         this.visitedElements = new Set();
         this.directChildren = new Map();
         this.errorInteractingWithElements = [];
-        
+        this.pageElementsCache = new Map();
         // Set up graceful shutdown
         this.setupGracefulShutdown();
     }
     
+    /**
+     * Determines whether a URL should be skipped during crawling.
+     * Uses efficient regex patterns and Set lookups to identify URLs to skip.
+     */
     private shouldSkipUrl(url: string): boolean {
-        // Original auth-related checks
-        const skipKeywords = new Set([
-            'login', 'signin', 'sign-in', 'signup', 'sign-up', 'register',
-            'authentication', 'auth', 'password', 'account'
-        ]);
-    
-        try {
-            // Handle relative URLs by checking the path directly
-            const path = url.startsWith('http') ? new URL(url).pathname : url;
-            
-            // Get the last segment of the path
-            const lastSegment = path.split('/').filter(Boolean).pop()?.toLowerCase() || '';
+        // Skip empty or invalid URLs
+        if (!url || url === '#' || url === 'javascript:void(0)') {
+            return true;
+        }
         
-            // Check for auth-related URLs
-            const isAuthUrl = skipKeywords.has(lastSegment);
+        try {
+            // Normalize the URL for consistent checking
+            const urlLower = url.toLowerCase();
             
-            // Check for non-HTML resources
-            const fileExtension = lastSegment.includes('.') ? lastSegment.split('.').pop()?.toLowerCase() : '';
-            const nonHtmlExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 
-                                      'rar', 'exe', 'mp3', 'mp4', 'avi', 'mov', 'jpg', 'jpeg', 
-                                      'png', 'gif', 'svg', 'webp', 'csv', 'txt'];
-            
-            const isNonHtmlResource = fileExtension ? nonHtmlExtensions.includes(fileExtension) : false;
-            
-            if (isAuthUrl) {
-                console.log('⚠️ Skipping auth page:', lastSegment);
+            // 1. Check for non-HTTP protocols with a single regex
+            if (/^(mailto:|tel:|sms:|ftp:)/.test(urlLower)) {
+                console.log(`⚠️ Skipping non-HTTP protocol: ${url}`);
+                return true;
             }
             
-            if (isNonHtmlResource) {
-                console.log(`⚠️ Skipping non-HTML resource: ${url} (${fileExtension} file)`);
+            // 2. Check for file extensions with a single regex
+            const fileExtensionMatch = urlLower.match(/\.([a-z0-9]{2,4})(\?|#|$)/);
+            if (fileExtensionMatch) {
+                const extension = fileExtensionMatch[1];
+                const nonHtmlExtensions = new Set([
+                    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'txt',
+                    'zip', 'rar', 'tar', 'gz', '7z', 'mp3', 'mp4', 'avi', 'mov', 'wmv',
+                    'jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'bmp', 'ico', 'exe'
+                ]);
+                
+                if (nonHtmlExtensions.has(extension)) {
+                    console.log(`⚠️ Skipping non-HTML resource: ${url} (${extension} file)`);
+                    return true;
+                }
             }
             
-            return isAuthUrl || isNonHtmlResource;
+            // 3. Check for auth-related URLs with a single regex
+            // This regex checks for auth keywords as whole words in the path
+            const authUrlRegex = /\/(login|signin|sign-in|signup|sign-up|register|authentication|auth|password|logout|signout|sign-out)(\/|$|\?)/;
+            if (authUrlRegex.test(urlLower)) {
+                console.log(`⚠️ Skipping auth page: ${url}`);
+                return true;
+            }
+            
+            // 4. Check for auth-related query parameters with a single test
+            if (urlLower.includes('?') && 
+                /[?&](login|signin|signup|auth|token|password|reset|logout|signout)=/.test(urlLower)) {
+                console.log(`⚠️ Skipping auth-related URL (query param): ${url}`);
+                return true;
+            }
+            
+            return false;
         } 
         catch (error) {
             console.warn('Invalid URL:', url);
-            return false;
+            return true; // Skip invalid URLs
         }
     }
 
+    private normalizeUrl(url: string): string {
+        try {
+            // Handle relative URLs
+            if (!url.startsWith('http')) {
+                return url.replace(/\/$/, ''); // Just remove trailing slash for relative URLs
+            }
+            
+            // Parse the URL
+            const parsedUrl = new URL(url);
+            
+            // Standardize protocol (use https if available)
+            parsedUrl.protocol = 'https:';
+            
+            // Remove trailing slash from pathname
+            parsedUrl.pathname = parsedUrl.pathname.replace(/\/$/, '') || '/';
+            
+            // Sort query parameters for consistency
+            if (parsedUrl.search) {
+                const params = Array.from(parsedUrl.searchParams.entries())
+                    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
+                
+                // Clear existing params
+                parsedUrl.search = '';
+                
+                // Add sorted params
+                for (const [key, value] of params) {
+                    parsedUrl.searchParams.append(key, value);
+                }
+            }
+            
+            // Remove hash/fragment
+            parsedUrl.hash = '';
+            
+            return parsedUrl.toString();
+        } catch (error) {
+            console.warn(`Failed to normalize URL: ${url}`, error);
+            return url; // Return original URL if normalization fails
+        }
+    }
+
+    private shouldSkipNode(nodeName: string): boolean {
+        //Add as needed
+        return ['script', 'style', 'link', 'meta', 'img', 'path', 'svg', 'noscript', 'video', 'audio'].includes(nodeName);
+    }
+
+    /**
+     * Determines whether an interactive element should be skipped during crawling.
+     * Uses efficient regex patterns and direct checks to identify elements to skip.
+     */
     private shouldSkipElement(element: InteractiveElementGeneric): boolean {
-        const elementText = element.name?.toLowerCase() || '';
-        const elementHref = element.href?.toLowerCase() || '';
-        const elementId = element.id?.toLowerCase() || '';
+        if (!element || !element.name || element.name.trim() === '') {
+            return true;
+        }
+    
+        const text = element.name.toLowerCase();
+        const href = (element.href || '').toLowerCase();
         
-        return this.SKIP_KEYWORDS.some(keyword => 
-            elementText.includes(keyword) || 
-            elementHref.includes(keyword) || 
-            elementId.includes(keyword)
-        );
+        // 1. Check auth-related text with a single regex
+        // This checks for common auth-related terms as whole words
+        if (/\b(sign in|sign up|log in|login|logout|log out|register|create account|my account|sign out)\b/i.test(text)) {
+            return true;
+        }
+        
+        // 2. Check auth-related URLs with a single regex
+        if (href && /\/(login|signin|signup|register|auth|account|profile|logout|signout)(\/|$|\?)/i.test(href)) {
+            return true;
+        }
+        
+        // 3. Check for social media links with a single regex
+        if (/\b(facebook|twitter|instagram|linkedin|youtube|pinterest|share|tweet|follow)\b/i.test(text) ||
+            /\b(facebook|twitter|instagram|linkedin|youtube|pinterest)\b/i.test(href)) {
+            return true;
+        }
+        
+        // 4. Check for cookie-related elements with a single regex
+        if (/\b(cookie|cookies|accept|privacy policy|gdpr|ccpa)\b/i.test(text)) {
+            return true;
+        }
+        
+        // 5. Check for utility functions with a single regex
+        if (/\b(print|download|export|save|email this)\b/i.test(text)) {
+            return true;
+        }
+        return false;
     }
     
     isInteractiveElement(nodeName: string, attributes?: any): boolean {
@@ -159,25 +242,56 @@ export class Intelligence {
         return false;
     }
 
-    async extractInteractiveElements(url: string): Promise<InteractiveElementGeneric[]> {
+    async extractInteractiveElements(url: string, existingPage?: Page, forceRefresh = false): Promise<InteractiveElementGeneric[]> {
         console.log('\n=== Starting Interactive Elements Extraction ===');
         console.log(`URL: ${url}`);
+
+        // Normalize URL for consistent caching
+        const normalizedUrl = this.normalizeUrl(url);
+
+        // Check cache first (unless force refresh is requested)
+        if (!forceRefresh && this.pageElementsCache.has(normalizedUrl)) {
+            console.log(`Using cached elements for ${normalizedUrl}`);
+            return Array.from(this.pageElementsCache.get(normalizedUrl)!.values());
+        }
         
         let browser;
+        let shouldCloseBrowser = false;
+        
         try {
-            browser = await this.setupBrowser(url);
-            const { page, client, root } = browser;
-            const interactiveElements = await this.processDocument(page, client, root);
+            if (existingPage) {
+                console.log('Using existing page');
+                await existingPage.goto(url);
+                const client = await existingPage.context().newCDPSession(existingPage);
+                const { root } = await client.send('DOM.getDocument');
+                browser = { page: existingPage, client, root, browser: null };
+            } 
+            else {
+                console.log('Creating new browser');
+                browser = await this.setupBrowser(url);
+                shouldCloseBrowser = true;
+            }
+            
+            const interactiveElements = await this.processDocument(browser.page, browser.client, browser.root);
+
+            // Store in cache by element ID for efficient lookup and comparison
+            const elementsMap = new Map<string, InteractiveElementGeneric>();
+            for (const element of interactiveElements) {
+                elementsMap.set(element.elementId, element);
+            }
+            
+            // Update the cache
+            this.pageElementsCache.set(normalizedUrl, elementsMap);
             
             console.log(`\n✅ Extraction complete. Found ${interactiveElements.length} interactive elements`);
             return interactiveElements;
         } 
         catch (error) {
             console.error('❌ Fatal error in extractInteractiveElements:', error);
-            throw error;
+            throw new Error(`Failed to extract elements from ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         finally {
-            if (browser?.browser) {
+            if (shouldCloseBrowser && browser?.browser) {
                 await browser.browser.close();
                 console.log('Browser closed');
             }
@@ -199,6 +313,32 @@ export class Intelligence {
         
         console.log('✅ Browser setup complete');
         return { browser, page, client, root };
+    }
+
+    /**
+     * Gets new elements that appeared after an interaction
+     */
+    async getNewElementsAfterInteraction(url: string, page: Page): Promise<InteractiveElementGeneric[]> {
+        // Normalize URL for consistent caching
+        const normalizedUrl = this.normalizeUrl(url);
+        
+        // Get the current cached elements (before interaction)
+        const beforeElements = this.pageElementsCache.get(normalizedUrl);
+        if (!beforeElements) {
+            console.log('No cached elements found for comparison');
+            return [];
+        }
+        
+        // Extract elements after interaction with force refresh
+        const afterElements = await this.extractInteractiveElements(url, page, true);
+        
+        // Find elements that weren't present before
+        const newElements = afterElements.filter(element => {
+            return !beforeElements.has(element.elementId);
+        });
+        
+        console.log(`Found ${newElements.length} new elements after interaction`);
+        return newElements;
     }
 
     private async processDocument(page: Page, client: CDPSession, root: DOMNode): Promise<InteractiveElementGeneric[]> {
@@ -230,35 +370,32 @@ export class Intelligence {
             for (const link of navLinks) {
                 try {
                     const href = await link.getAttribute('href');
-                    const text = await link.textContent() || '';
+                    const text = await link.innerText();
+                    const role = await link.getAttribute('role') || 'link';
                     
-                    // Skip if no href
-                    if (!href) continue;
-                    
-                    // Create navigation element
-                    const navElement: InteractiveElementGeneric = {
-                        type: 'a',
-                        name: text.trim(),
-                        id: `navlink-${this.slugify(text.trim())}`,
-                        role: 'link',
-                        attributes: {
-                            href: href
-                        },
-                        href: href,
-                        target: '_self',
-                        events: ['click']
-                    };
-                    
-                    // Add to interactiveElements array
-                    interactiveElements.push(navElement);
+                    if (href && text && !href.startsWith('javascript:') && !href.startsWith('#')) {
+                        console.log(`Found navigation link: ${text} -> ${href}`);
+                        
+                        const element: InteractiveElementGeneric = {
+                            type: 'a',
+                            name: text.trim(),
+                            role: role,
+                            href: href,
+                            elementId: `nav-${text.trim().toLowerCase().replace(/\s+/g, '-')}`,
+                            attributes: { href },
+                            events: ['click']
+                        };
+                        
+                        interactiveElements.push(element);
+                    }
                 } catch (error) {
                     console.error('Error processing navigation link:', error);
                 }
             }
-        } catch (error) {
+        } 
+        catch (error) {
             console.error('Error finding navigation elements:', error);
         }
-    
         const processNode = async (node: DOMNode): Promise<boolean> => {
             try {
                 if (!node.nodeId && !node.backendNodeId) {
@@ -287,6 +424,11 @@ export class Intelligence {
                         objectId: object.objectId, 
                         returnByValue: true
                     });
+
+                    if (!result.value?.isVisible) {
+                        console.log('Node is not visible');
+                        return false;
+                    } 
     
                     const nodeDetails = await this.getNodeDetails(client, node.nodeId, node.backendNodeId);
                     if (!nodeDetails) {
@@ -299,11 +441,6 @@ export class Intelligence {
                         console.log(`Skipping non-interactive node: ${nodeName}`);
                         return false;
                     }
-        
-                    if (!result.value?.isVisible) {
-                        console.log('Node is not visible');
-                        return false;
-                    } 
     
                     // Process children first
                     let childHasListeners = false;
@@ -326,9 +463,10 @@ export class Intelligence {
                     }
     
                     const listeners = await this.getNodeEventListeners(client, nodeDetails);
+                    const eventListeners = listeners.map(l => l.type);
                     
                     // Special handling for FORM elements
-                    if (nodeName === 'form' || (listeners.length > 0 && this.isInteractiveElement(nodeName))) {
+                    if (listeners.length > 0 && this.isInteractiveElement(nodeName)) {
                         console.log(`✨ Found interactive ${nodeName} with ${listeners.length} listeners`);
                         
                         // Get a11y info
@@ -347,116 +485,29 @@ export class Intelligence {
     
                         // For forms, extract form inputs and submit buttons
                         if (nodeName === 'form') {
-                            console.log('Processing form element');
-                            
-                            // Get form attributes
-                            const attrs = this.processAttributes(nodeDetails.attributes);
-                            
-                            // Use Playwright to get form inputs
-                            try {
-                                // Create a selector for this form
-                                let formSelector = 'form';
-                                if (attrs.id) formSelector = `form#${attrs.id}`;
-                                else if (attrs.name) formSelector = `form[name="${attrs.name}"]`;
-                                else if (attrs.class) formSelector = `form.${attrs.class.replace(/ /g, '.')}`;
-                                
-                                const formLocator = page.locator(formSelector);
-                                if (await formLocator.count() > 0) {
-                                    // Get form inputs
-                                    const inputs = await formLocator.locator('input:not([type="hidden"]), select, textarea').all();
-                                    const formInputs = [];
-                                    
-                                    for (const input of inputs) {
-                                        const [inputType, inputName, inputId, inputPlaceholder] = await Promise.all([
-                                            input.getAttribute('type').catch(() => 'text'),
-                                            input.getAttribute('name').catch(() => null),
-                                            input.getAttribute('id').catch(() => null),
-                                            input.getAttribute('placeholder').catch(() => null)
-                                        ]);
-                                        
-                                        formInputs.push({
-                                            type: inputType,
-                                            name: inputName,
-                                            id: inputId,
-                                            placeholder: inputPlaceholder
-                                        });
-                                    }
-                                    
-                                    // Get submit buttons
-                                    const submitButtons = await formLocator.locator('button[type="submit"], input[type="submit"]').all();
-                                    const formButtons = [];
-                                    
-                                    for (const button of submitButtons) {
-                                        const [buttonText, buttonValue] = await Promise.all([
-                                            button.innerText().catch(() => null),
-                                            button.getAttribute('value').catch(() => null)
-                                        ]);
-                                        
-                                        formButtons.push({
-                                            text: buttonText,
-                                            value: buttonValue
-                                        });
-                                    }
-                                    
-                                    // Create form element with detailed info
-                                    const formElement: InteractiveElementGeneric = {
-                                        type: 'form',
-                                        name: a11yInfo.name || attrs.id || attrs.name || 'Form',
-                                        id: `form-${attrs.id || attrs.name || 'unnamed'}`,
-                                        role: a11yInfo.role || 'form',
-                                        attributes: attrs,
-                                        events: ['submit'],
-                                        formInfo: {
-                                            inputs: formInputs,
-                                            submitButtons: formButtons,
-                                            action: attrs.action,
-                                            method: attrs.method || 'get'
-                                        }
-                                    };
-                                    
-                                    interactiveElements.push(formElement);
-                                    
-                                    // Also add the submit button as a separate interactive element
-                                    if (submitButtons.length > 0) {
-                                        const submitButton = submitButtons[0];
-                                        const buttonText = await submitButton.innerText().catch(() => 
-                                            submitButton.getAttribute('value').catch(() => 'Submit'));
-                                        
-                                        const submitElement: InteractiveElementGeneric = {
-                                            type: 'button',
-                                            name: buttonText || 'Submit',
-                                            id: `submit-${attrs.id || attrs.name || 'form'}`,
-                                            role: 'button',
-                                            events: ['click'],
-                                            formInfo: {
-                                                formId: attrs.id,
-                                                formName: attrs.name,
-                                                isSubmit: true
-                                            }
-                                        };
-                                        
-                                        interactiveElements.push(submitElement);
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('Error processing form with Playwright:', error);
+                            const formElement = await this.createInteractiveFormElement(page, nodeDetails, a11yInfo);
+                            if (this.shouldSkipElement(formElement)) {
+                                console.log('Skipping form element as invalid:', formElement);
+                                return false;
                             }
+                            interactiveElements.push(formElement);
                         } 
                         else {
-                            // Regular interactive element
-                            const element = {
-                                type: nodeName,
-                                name: a11yInfo.name || nodeDetails.nodeValue || nodeDetails.localName || '',
-                                role: a11yInfo.role,
-                                events: listeners.map(l => l.type)
-                            };
-                            
-                            const interactiveElement = await this.createInteractiveElement(nodeDetails, element);
+                            const interactiveElement = await this.createInteractiveElement(nodeDetails, a11yInfo, eventListeners);
                             if (interactiveElement) {
-                                interactiveElements.push(interactiveElement);
+                                if (interactiveElement.type === 'link' || (interactiveElement.href && this.shouldSkipUrl(interactiveElement.href))) {
+                                    console.log('⚠️ Skipping element as invalid href:', interactiveElement.href);
+                                    return false; 
+                                }
+                                else if (this.shouldSkipElement(interactiveElement)) {
+                                    console.log('Skipping element as invalid:', interactiveElement);
+                                    return false; 
+                                }
+                                else {
+                                    interactiveElements.push(interactiveElement);
+                                }
                             }
                         }
-                        
                         return true;
                     }
                 }
@@ -533,35 +584,19 @@ export class Intelligence {
             return null;
         }
     }
-    
-    private shouldSkipNode(nodeName: string): boolean {
-        //Add as needed
-        return ['script', 'style', 'link', 'meta', 'img', 'path', 'svg', 'noscript', 'video', 'audio'].includes(nodeName);
-    }
-    
 
-    
     private generateElementId(element: DOMNode, attrs: any): string {
-        console.log('\n🏷️ Generating element ID');
-        console.log('Element:', {
-            nodeName: element.nodeName,
-            nodeId: element.nodeId,
-            attributes: attrs
-        });
-    
-        const idParts = [
-            attrs.id,
-            attrs.name,
-            attrs.class,
-            `${element.nodeName.toLowerCase()}-${attrs.type || ''}-${attrs.placeholder || ''}`
-        ].filter(Boolean);
-    
-        const stableId = idParts.join('-');
-        return stableId;
+        if (attrs.id) {
+            return attrs.id;
+        }
+        else if (attrs.name && attrs.class) {
+            return `${attrs.name}-${attrs.class}`;
+        }
+        else {
+            return `${element.nodeName.toLowerCase()}-${element.backendNodeId}`;
+        }
     }
     
-
-
     private processAttributes(attributes: string[] | undefined): { [key: string]: string } {
         console.log('\n📝 Processing attributes');
     
@@ -581,29 +616,152 @@ export class Intelligence {
         return result;
     }
 
-    private async createInteractiveElement(node: DOMNode, element: any) {
+    private async createInteractiveElement(node: DOMNode, element: any, eventListeners: string[]) {
         console.log('\n🔨 Creating interactive element...');
         
         const attrs = this.processAttributes(node.attributes);
         const elementId = this.generateElementId(node, attrs);
-
-        if (element.name.toLowerCase().includes('cookies')) {
-            return null;
-        }
     
         const interactiveElement: InteractiveElementGeneric = {
             type: node.nodeName.toLowerCase(),
             name: element.name || node.nodeValue || node.localName || '',
-            id: elementId,
+            elementId: elementId,
             role: element.role,
             attributes: attrs,
             href: attrs.href,
             target: attrs.target || '_self',
-            events: element.events
+            events: eventListeners
         };
 
         console.log('Element details:', interactiveElement);
         return interactiveElement;
+    }
+
+    /**
+     * Creates a single interactive element representing a form with all its inputs and controls.
+     */
+    private async createInteractiveFormElement(
+        page: Page, 
+        nodeDetails: DOMNode, 
+        a11yInfo: any
+    ): Promise<InteractiveElementGeneric> {
+        console.log('Processing form element');
+        
+        // Get form attributes
+        const attrs = this.processAttributes(nodeDetails.attributes);
+        
+        // Default form element with minimal information
+        const formElement: InteractiveElementGeneric = {
+            type: 'form',
+            name: a11yInfo.name || attrs.id || attrs.name || 'Form',
+            elementId: this.generateElementId(nodeDetails, attrs),
+            role: a11yInfo.role || 'form',
+            attributes: attrs,
+            events: ['submit'],
+            formInfo: {
+                inputs: [],
+                submitButtons: [],
+                action: attrs.action,
+                method: attrs.method || 'get'
+            }
+        };
+        
+        try {
+            // Create a selector for this form
+            let formSelector = 'form';
+            if (attrs.id) formSelector = `form#${attrs.id}`;
+            else if (attrs.name) formSelector = `form[name="${attrs.name}"]`;
+            else if (attrs.class) formSelector = `form.${attrs.class.replace(/ /g, '.')}`;
+            
+            const formLocator = page.locator(formSelector);
+            if (await formLocator.count() > 0) {
+                // Get form inputs
+                const inputs = await formLocator.locator('input:not([type="hidden"]), select, textarea').all();
+                const formInputs = [];
+                
+                for (const input of inputs) {
+                    const [inputType, inputName, inputId, inputPlaceholder, inputValue, inputRequired] = await Promise.all([
+                        input.getAttribute('type').catch(() => 'text'),
+                        input.getAttribute('name').catch(() => null),
+                        input.getAttribute('id').catch(() => null),
+                        input.getAttribute('placeholder').catch(() => null),
+                        input.getAttribute('value').catch(() => null),
+                        input.getAttribute('required').then(val => val !== null).catch(() => false)
+                    ]);
+                    
+                    formInputs.push({
+                        type: inputType,
+                        name: inputName,
+                        id: inputId,
+                        placeholder: inputPlaceholder,
+                        value: inputValue,
+                        required: inputRequired,
+                        selector: `#${inputId}` || `[name="${inputName}"]` || `input[type="${inputType}"]`
+                    });
+                }
+                
+                // Get submit buttons
+                const submitButtons = await formLocator.locator('button[type="submit"], input[type="submit"]').all();
+                const formButtons = [];
+                
+                for (const button of submitButtons) {
+                    const [buttonText, buttonValue, buttonId, buttonName] = await Promise.all([
+                        button.innerText().catch(() => null),
+                        button.getAttribute('value').catch(() => null),
+                        button.getAttribute('id').catch(() => null),
+                        button.getAttribute('name').catch(() => null)
+                    ]);
+                    
+                    formButtons.push({
+                        text: buttonText || buttonValue || 'Submit',
+                        value: buttonValue,
+                        id: buttonId,
+                        name: buttonName,
+                        selector: buttonId ? `#${buttonId}` : (buttonName ? `[name="${buttonName}"]` : 'button[type="submit"]')
+                    });
+                }
+                
+                // Update form element with detailed info
+                formElement.formInfo = {
+                    inputs: formInputs,
+                    submitButtons: formButtons,
+                    action: attrs.action,
+                    method: attrs.method || 'get',
+                    hasRequiredFields: formInputs.some(input => input.required),
+                    inputCount: formInputs.length,
+                    submitCount: formButtons.length
+                };
+                
+                // Add a chain property to represent the interaction sequence
+                formElement.chain = [
+                    // First fill out all inputs
+                    ...formInputs.map(input => ({
+                        type: 'input',
+                        selector: input.selector,
+                        attributes: {
+                            type: input.type,
+                            name: input.name,
+                            id: input.id,
+                            placeholder: input.placeholder
+                        }
+                    })),
+                    // Then click the submit button
+                    ...(formButtons.length > 0 ? [{
+                        type: 'button',
+                        selector: formButtons[0].selector,
+                        attributes: {
+                            text: formButtons[0].text,
+                            value: formButtons[0].value
+                        }
+                    }] : [])
+                ];
+            }
+        } 
+        catch (error) {
+            console.error('Error processing form with Playwright:', error);
+        }
+        
+        return formElement;
     }
         
 
@@ -625,20 +783,25 @@ export class Intelligence {
         }
     
         // Create a unique ID for this element to detect cycles
-        const elementId = interactiveElement ? 
-            `${url}::${interactiveElement.type}::${interactiveElement.name}` : url;
+        const elementId = interactiveElement ? interactiveElement.elementId : url;
         
         // Check for cycle in element interaction
-        if (currentPath.has(elementId)) {
+        if (elementId && currentPath.has(elementId)) {
             console.log('⚠️ Cycle detected! Element or URL already in current path. Returning.');
             console.log('Current path:', Array.from(currentPath));
             return;
         }
         
         // Add to current path
-        currentPath.add(elementId);
-        console.log(`Added to path: ${elementId}`);
-        console.log(`Current path size: ${currentPath.size}`);
+        if (elementId) {
+            currentPath.add(elementId);
+            console.log(`Added to path: ${elementId}`);
+            console.log(`Current path size: ${currentPath.size}`);
+        }
+        else {
+            console.log('No element ID found, skipping');
+            return;
+        }
     
         let shouldClosePage = false;
         if (!page) {
@@ -668,17 +831,7 @@ export class Intelligence {
             // If we have an interactive element, interact with it
             if (interactiveElement) {
                 console.log('🔄 Processing Interactive Element:');
-                console.log(`Type: ${interactiveElement.type}`);
-                console.log(`ID: ${interactiveElement.id}`);
-                console.log(`Selector: ${interactiveElement.selector}`);
-                
-                // Skip if we should skip this element
-                if (this.shouldSkipElement(interactiveElement)) {
-                    console.log('⚠️ Skipping authentication-related element');
-                    currentPath.delete(elementId);
-                    return;
-                }
-                
+                console.log(interactiveElement);
                 try {
                     // Perform the interaction
                     console.log('Attempting interaction...');
@@ -697,30 +850,30 @@ export class Intelligence {
                     // If URL changed, explore the new URL
                     if (newUrl !== url) {
                         console.log('🌐 URL changed after interaction, exploring new URL');
+                        if (interactiveElement) {
+                            this.addEdgeWithTracking(interactiveElement.name, newUrl);
+                        }
+
+                        // Continue exploration from the new URL
+                        // The recursive call will handle element extraction
                         await this.expandTree(newUrl, page, undefined, currentPath, depth + 1);
                     } 
                     else {
-                        // Extract new elements after interaction
+                        // URL stayed the same, but page state might have changed
                         console.log('Extracting new elements after interaction...');
-                        const newElements = await this.extractInteractiveElements(url);
-                        console.log(`Found ${newElements.length} new elements`);
-                        console.log('tree', this.webAppGraph);
-                        
+
+                        const newElements = await this.getNewElementsAfterInteraction(url, page);
+
                         // Process each new element
                         for (const element of newElements) {
-                            // Create a unique ID for this element
-                            const newElementId = `${element.id}`;
-                            console.log(`\nProcessing new element: ${newElementId}`);
-                            
-                            // Skip if we've already visited this element on this page
-                            if (this.visitedElements.has(newElementId)) {
-                                console.log('Element already visited, skipping');
+                            // Skip if we've already visited this element
+                            if (this.visitedElements.has(element.elementId)) {
+                                console.log(`Element ${element.elementId} already visited, skipping`);
                                 continue;
                             }
                             
                             // Mark as visited
-                            this.visitedElements.add(newElementId);
-                            console.log('Element not visited before, processing...');
+                            this.visitedElements.add(element.elementId);
                             
                             // Add to graph
                             const elementComponent: WebComponent = {
@@ -729,7 +882,7 @@ export class Intelligence {
                             };
                             
                             if (!this.webAppGraph.getNode(elementComponent.name)) {
-                                console.log('Adding new node to graph');
+                                console.log(`Adding new element node to graph: ${element.name}`);
                                 this.webAppGraph.insert(elementComponent);
                                 
                                 // Add edge from current element to new element
@@ -774,7 +927,7 @@ export class Intelligence {
                 
                 // Process each element
                 for (const element of elements) {
-                    const elementId = `${element.id}`;
+                    const elementId = `${element.elementId}`;
                     console.log(`\nProcessing element: ${elementId}`);
                     
                     // Skip if we've already visited this element
@@ -801,7 +954,7 @@ export class Intelligence {
                     
                     // If it's a link, follow it
                     if ('href' in element && element.href) {
-                        console.log(`Processing href: ${element.href}`);
+                        console.log(`Going to interactive element's href: ${element.href}`);
                         const nextUrl = this.getNavigationUrl(element.href, new URL(url));
                         if (nextUrl) {
                             console.log(`Valid navigation URL found: ${nextUrl}`);
@@ -1276,85 +1429,6 @@ export class Intelligence {
             console.error(`Error processing URL: ${href}`, error);
             return null;
         }
-    }
-
-    // New helper method to extract navigation elements
-    private async extractNavigationElements(page: Page): Promise<InteractiveElementGeneric[]> {
-        const navElements: InteractiveElementGeneric[] = [];
-        
-        try {
-            // Find all navigation elements using common selectors
-            const navSelectors = [
-                'nav', 
-                'header', 
-                '[role="navigation"]', 
-                '.navigation', 
-                '.navbar', 
-                '.nav', 
-                '#navigation',
-                '#navbar',
-                '#nav'
-            ];
-            
-            // Combine selectors
-            const combinedSelector = navSelectors.join(', ');
-            const navLocators = page.locator(combinedSelector);
-            const count = await navLocators.count();
-            
-            console.log(`Found ${count} navigation containers`);
-            
-            // Process each navigation container
-            for (let i = 0; i < count; i++) {
-                const navElement = navLocators.nth(i);
-                const navId = await navElement.getAttribute('id') || `nav-${i}`;
-                
-                // Get all links in this navigation
-                const links = await navElement.locator('a').all();
-                console.log(`Navigation #${i} (${navId}) has ${links.length} links`);
-                
-                // Process each link
-                for (const link of links) {
-                    const [linkText, linkHref] = await Promise.all([
-                        link.innerText().catch(() => ''),
-                        link.getAttribute('href').catch(() => null)
-                    ]);
-                    
-                    if (linkHref && linkText.trim()) {
-                        // Skip login/auth links
-                        if (this.SKIP_KEYWORDS.some(keyword => 
-                            linkText.toLowerCase().includes(keyword) || 
-                            (linkHref && linkHref.toLowerCase().includes(keyword)))) {
-                            console.log(`Skipping auth-related nav link: ${linkText}`);
-                            continue;
-                        }
-                        
-                        // Create a unique ID for this nav link
-                        const linkElementId = `navlink-${linkText.trim().toLowerCase().replace(/\s+/g, '-')}`;
-                        
-                        const navLinkElement: InteractiveElementGeneric = {
-                            type: 'navlink',
-                            name: linkText.trim(),
-                            id: linkElementId,
-                            role: 'link',
-                            href: linkHref,
-                            events: ['click'],
-                            relationships: {
-                                navGroup: navId,
-                                isNavigation: true
-                            }
-                        };
-
-                        if (!this.visitedElements.has(linkElementId)) {
-                            navElements.push(navLinkElement);
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error extracting navigation elements:', error);
-        }
-        
-        return navElements;
     }
 
     private setupGracefulShutdown(): void {

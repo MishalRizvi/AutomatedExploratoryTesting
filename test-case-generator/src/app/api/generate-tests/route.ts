@@ -7,7 +7,6 @@ export async function POST(request: Request) {
         console.log("Starting flow analysis for URL:", data.url);
 
         const intelligence = new Intelligence();
-        const interactiveElements = await intelligence.extractInteractiveElements(data.url);
         await intelligence.expandTree(data.url);
         
         // Get the graph data
