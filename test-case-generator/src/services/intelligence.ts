@@ -1,6 +1,5 @@
 import { Graph, DirectedGraph } from 'typescript-graph';
 import { CDPSession, chromium, ElementHandle, Locator, Page } from 'playwright';
-import { listeners } from 'process';
 
 declare global {
     var testGenerationProgress: {
@@ -45,7 +44,7 @@ export interface InteractiveElementGeneric {
     elementId: string;
     role?: string;
     href?: string;
-    inputElements?: any[]; //locator[]
+    inputElements?: any[];
     buttonElements?: any[];
     attributes?: any;
     triggerElement?: any;
@@ -58,11 +57,6 @@ export interface InteractiveElementGeneric {
     selectorsList?: (string | undefined)[];
 }
 
-
-//For now, the graph is expanded by clicking on buttons and links 
-//However user interaction can be more complex
-//TODO: Handle forms
-//TODO: Handle hover and see what else needs to be handled - can use hercules? or quora?
 export class Intelligence {
 
     public webAppGraph: DirectedGraph<WebComponent>;
@@ -70,6 +64,7 @@ export class Intelligence {
     public directChildren: Map<string, string[]>; // Map to store direct children
     public errorInteractingWithElements: InteractiveElementGeneric[];
     private pageElementsCache = new Map<string, Map<string, InteractiveElementGeneric>>();
+    public visitedNavigations: Set<string>;
     private readonly MAX_DEPTH = 10;
     
     constructor() {
@@ -78,6 +73,7 @@ export class Intelligence {
         this.directChildren = new Map();
         this.errorInteractingWithElements = [];
         this.pageElementsCache = new Map();
+        this.visitedNavigations = new Set();
         // Set up graceful shutdown
         this.setupGracefulShutdown();
     }
@@ -175,7 +171,8 @@ export class Intelligence {
             parsedUrl.hash = '';
             
             return parsedUrl.toString();
-        } catch (error) {
+        } 
+        catch (error) {
             console.warn(`Failed to normalize URL: ${url}`, error);
             return url; // Return original URL if normalization fails
         }
@@ -381,14 +378,22 @@ export class Intelligence {
                             name: text.trim(),
                             role: role,
                             href: href,
-                            elementId: `nav-${text.trim().toLowerCase().replace(/\s+/g, '-')}`,
+                            elementId: href,
                             attributes: { href },
                             events: ['click']
                         };
+
+                        if (this.visitedNavigations.has(element.elementId)) {
+                            console.log(`Navigation link ${element.elementId} already visited, skipping`);
+                            continue;
+                        }
+
+                        this.visitedNavigations.add(element.elementId);
                         
                         interactiveElements.push(element);
                     }
-                } catch (error) {
+                } 
+                catch (error) {
                     console.error('Error processing navigation link:', error);
                 }
             }
